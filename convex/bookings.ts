@@ -43,6 +43,8 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const combo = await ctx.db.get(args.comboId);
+    if (!combo) throw new Error("El combo seleccionado ya no está disponible");
     const id = await ctx.db.insert("bookings", {
       name: args.name,
       phone: args.phone,
@@ -72,6 +74,8 @@ export const adminCreate = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("No autenticado");
+    const combo = await ctx.db.get(args.comboId);
+    if (!combo) throw new Error("El combo seleccionado no existe");
     const id = await ctx.db.insert("bookings", {
       name: args.name,
       phone: args.phone,

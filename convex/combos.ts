@@ -76,6 +76,11 @@ export const remove = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("No autenticado");
+    const bookingsWithCombo = await ctx.db.query("bookings").filter((q) => q.eq(q.field("comboId"), args.id)).collect();
+    const activeBookings = bookingsWithCombo.filter((b) => b.status !== "cancelado");
+    if (activeBookings.length > 0) {
+      throw new Error(`No se puede eliminar: hay ${activeBookings.length} reserva(s) activa(s) con este combo`);
+    }
     await ctx.db.delete(args.id);
   },
 });

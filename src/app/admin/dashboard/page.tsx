@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useAuthActions, useConvexAuth } from "@convex-dev/auth/react";
@@ -50,9 +50,18 @@ export default function Dashboard() {
   });
 
   const [comboForm, setComboForm] = useState({
-    name: "", category: "", price: "", description: "", imageUrl: "",
+    name: "", category: "", price: "", description: "", imageUrl: "", active: true,
   });
   const [editingCombo, setEditingCombo] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (error || success) {
+      const t = setTimeout(() => { setError(null); setSuccess(null); }, 5000);
+      return () => clearTimeout(t);
+    }
+  }, [error, success]);
 
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
@@ -90,30 +99,41 @@ export default function Dashboard() {
 
   const handleCreateBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    await adminCreate({
-      name: newBooking.name, phone: newBooking.phone, date: newBooking.date,
-      comboId: newBooking.comboId as any, notes: newBooking.notes || undefined,
-      status: newBooking.status,
-    });
-    setNewBooking({ name: "", phone: "", date: "", comboId: "", notes: "", status: "pendiente" });
-    setTab("citas");
+    try {
+      await adminCreate({
+        name: newBooking.name, phone: newBooking.phone, date: newBooking.date,
+        comboId: newBooking.comboId as any, notes: newBooking.notes || undefined,
+        status: newBooking.status,
+      });
+      setNewBooking({ name: "", phone: "", date: "", comboId: "", notes: "", status: "pendiente" });
+      setSuccess("Cita registrada correctamente");
+      setTab("citas");
+    } catch (err: any) {
+      setError(err.message || "Error al registrar la cita");
+    }
   };
 
   const handleComboSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingCombo) {
-      await updateCombo({ id: editingCombo as any, ...comboForm, active: true });
-      setEditingCombo(null);
-    } else {
-      await createCombo(comboForm);
+    try {
+      if (editingCombo) {
+        await updateCombo({ id: editingCombo as any, ...comboForm });
+        setEditingCombo(null);
+      } else {
+        await createCombo(comboForm);
+      }
+      setComboForm({ name: "", category: "", price: "", description: "", imageUrl: "", active: true });
+      setSuccess(editingCombo ? "Combo actualizado" : "Combo creado");
+    } catch (err: any) {
+      setError(err.message || "Error al guardar el combo");
     }
-    setComboForm({ name: "", category: "", price: "", description: "", imageUrl: "" });
   };
 
   const startEditCombo = (combo: any) => {
     setComboForm({
       name: combo.name, category: combo.category, price: combo.price,
       description: combo.description, imageUrl: combo.imageUrl || "",
+      active: combo.active ?? true,
     });
     setEditingCombo(combo._id);
     setTab("combos");
@@ -135,7 +155,25 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-ivory">
-      <header className="bg-white/90 backdrop-blur-md border-b border-stone/10 sticky top-0 z-40">
+        {error && (
+          <div className="fixed top-4 right-4 z-50 bg-rose-50 border border-rose-200 text-rose-700 px-6 py-3 rounded-2xl shadow-lg text-sm flex items-center gap-3 max-w-sm">
+            <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+            <span>{error}</span>
+            <button onClick={() => setError(null)} className="ml-auto shrink-0 hover:opacity-60">&times;</button>
+          </div>
+        )}
+        {success && (
+          <div className="fixed top-4 right-4 z-50 bg-emerald-50 border border-emerald-200 text-emerald-700 px-6 py-3 rounded-2xl shadow-lg text-sm flex items-center gap-3 max-w-sm">
+            <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+            <span>{success}</span>
+            <button onClick={() => setSuccess(null)} className="ml-auto shrink-0 hover:opacity-60">&times;</button>
+          </div>
+        )}
+        <header className="bg-white/90 backdrop-blur-md border-b border-stone/10 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 py-4 flex items-center justify-between">
           <div>
             <a href="/admin/dashboard" className="font-display text-xl text-charcoal tracking-wide hover:text-rose transition-colors">
@@ -251,13 +289,21 @@ export default function Dashboard() {
                 <input placeholder="URL de imagen (opcional)" value={comboForm.imageUrl}
                   onChange={(e) => setComboForm((p) => ({ ...p, imageUrl: e.target.value }))}
                   className="w-full bg-ivory/80 border border-stone/20 rounded-xl px-4 py-3.5 text-charcoal focus:outline-none focus:border-rose focus:ring-2 focus:ring-rose/10 transition-all text-sm" />
+                {editingCombo && (
+                  <label className="flex items-center gap-3 text-sm text-stone/60 cursor-pointer">
+                    <input type="checkbox" checked={comboForm.active}
+                      onChange={(e) => setComboForm((p) => ({ ...p, active: e.target.checked }))}
+                      className="w-4 h-4 rounded border-stone/30 text-rose focus:ring-rose" />
+                    Combo activo (visible en página pública)
+                  </label>
+                )}
                 <div className="flex gap-3 pt-2">
                   <button type="submit"
                     className="bg-charcoal text-white px-6 py-3 text-xs tracking-widest uppercase font-medium hover:bg-rose transition-all rounded-xl">
                     {editingCombo ? "Guardar cambios" : "Crear combo"}
                   </button>
                   {editingCombo && (
-                    <button type="button" onClick={() => { setEditingCombo(null); setComboForm({ name: "", category: "", price: "", description: "", imageUrl: "" }); }}
+                    <button type="button" onClick={() => { setEditingCombo(null); setComboForm({ name: "", category: "", price: "", description: "", imageUrl: "", active: true }); }}
                       className="border border-stone/20 text-stone px-6 py-3 text-xs tracking-widest uppercase font-medium hover:border-rose hover:text-rose transition-all rounded-xl">
                       Cancelar
                     </button>
@@ -286,7 +332,7 @@ export default function Dashboard() {
                           {combo.active ? "Activo" : "Inactivo"}
                         </span>
                         <button onClick={() => startEditCombo(combo)} className="text-xs text-stone/40 hover:text-rose transition-colors font-medium">Editar</button>
-                        <button onClick={() => deleteCombo({ id: combo._id as any })} className="text-xs text-stone/40 hover:text-rose transition-colors font-medium">Eliminar</button>
+                        <button onClick={async () => { try { await deleteCombo({ id: combo._id as any }); setSuccess("Combo eliminado"); } catch (err: any) { setError(err.message || "Error al eliminar"); } }} className="text-xs text-stone/40 hover:text-rose transition-colors font-medium">Eliminar</button>
                       </div>
                     </div>
                   ))}
@@ -380,13 +426,13 @@ export default function Dashboard() {
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           {booking.status !== "confirmado" && (
-                            <button onClick={() => updateStatus({ id: booking._id as any, status: "confirmado" })}
+                            <button onClick={async () => { try { await updateStatus({ id: booking._id as any, status: "confirmado" }); setSuccess("Cita confirmada"); } catch (err: any) { setError(err.message); } }}
                               className="text-xs border border-emerald-200 bg-emerald-50 text-emerald-700 px-3.5 py-2 rounded-xl hover:bg-emerald-100 transition-colors font-medium">
                               Confirmar
                             </button>
                           )}
                           {booking.status !== "cancelado" && (
-                            <button onClick={() => updateStatus({ id: booking._id as any, status: "cancelado" })}
+                            <button onClick={async () => { try { await updateStatus({ id: booking._id as any, status: "cancelado" }); setSuccess("Cita cancelada"); } catch (err: any) { setError(err.message); } }}
                               className="text-xs border border-rose-200 bg-rose-50 text-rose-700 px-3.5 py-2 rounded-xl hover:bg-rose-100 transition-colors font-medium">
                               Cancelar
                             </button>
@@ -399,7 +445,7 @@ export default function Dashboard() {
                               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6" />
                             </svg>
                           </button>
-                          <button onClick={() => removeBooking({ id: booking._id as any })}
+                          <button onClick={async () => { try { await removeBooking({ id: booking._id as any }); setSuccess("Cita eliminada"); } catch (err: any) { setError(err.message); } }}
                             className="w-9 h-9 flex items-center justify-center rounded-xl text-stone/30 hover:text-rose hover:bg-rose/5 transition-all">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                               <path d="M18 6L6 18M6 6l12 12" />

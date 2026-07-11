@@ -46,7 +46,6 @@ export default function Home() {
   const seedCombos = useMutation(api.seed.seedCombos);
 
   const [selectedCategory, setSelectedCategory] = useState("todas");
-  const [selectedCombo, setSelectedCombo] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "", phone: "", date: "", comboId: "", notes: "",
   });
@@ -67,7 +66,6 @@ export default function Home() {
     : combos?.filter((c) => c.category === selectedCategory);
 
   const handleComboSelect = (comboId: string) => {
-    setSelectedCombo(comboId);
     setFormData((prev) => ({ ...prev, comboId }));
     window.scrollTo({ top: document.getElementById("booking-form")?.offsetTop! - 120, behavior: "smooth" });
   };
@@ -215,34 +213,50 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filtered?.map((combo) => (
-                <div key={combo._id}
-                  className="group bg-white rounded-2xl overflow-hidden border border-stone/5 shadow-sm hover:shadow-xl hover:shadow-rose/5 transition-all duration-500">
-                  <div className="relative h-56 bg-gradient-to-br from-rose/5 via-ivory to-sage/5 flex items-center justify-center overflow-hidden">
-                    <Flower className="w-24 h-24 text-rose/10 group-hover:scale-110 group-hover:text-rose/20 transition-all duration-700" />
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-1.5 text-sm font-semibold text-rose rounded-full shadow-sm">
-                      {combo.price}
-                    </div>
-                  </div>
-                  <div className="p-7 lg:p-8">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="w-4 h-px bg-rose/40" />
-                      <span className="text-rose/60 text-[10px] tracking-[0.25em] uppercase font-medium">{combo.category}</span>
-                    </div>
-                    <h3 className="font-display text-2xl text-charcoal mb-2">{combo.name}</h3>
-                    <p className="text-stone/50 text-sm leading-relaxed mb-6 line-clamp-3">{combo.description}</p>
-                    <button onClick={() => handleComboSelect(combo._id)}
-                      className="inline-flex items-center gap-2 text-sm font-medium text-charcoal hover:text-rose transition-colors group/btn">
-                      <span className="border-b border-charcoal/20 group-hover/btn:border-rose pb-0.5">Elegir para mi evento</span>
-                      <svg className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </div>
+            {!combos ? (
+              <div className="col-span-full flex justify-center py-16">
+                <div className="flex items-center gap-3">
+                  <svg className="animate-spin w-5 h-5 text-rose" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  <span className="text-stone/40 font-display text-lg">Cargando paquetes...</span>
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : filtered?.length === 0 ? (
+              <div className="col-span-full text-center py-16">
+                <p className="text-stone/40 font-display text-xl">No hay paquetes en esta categoría</p>
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filtered?.map((combo) => (
+                  <div key={combo._id}
+                    className="group bg-white rounded-2xl overflow-hidden border border-stone/5 shadow-sm hover:shadow-xl hover:shadow-rose/5 transition-all duration-500">
+                    <div className="relative h-56 bg-gradient-to-br from-rose/5 via-ivory to-sage/5 flex items-center justify-center overflow-hidden">
+                      <Flower className="w-24 h-24 text-rose/10 group-hover:scale-110 group-hover:text-rose/20 transition-all duration-700" />
+                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-1.5 text-sm font-semibold text-rose rounded-full shadow-sm">
+                        {combo.price}
+                      </div>
+                    </div>
+                    <div className="p-7 lg:p-8">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="w-4 h-px bg-rose/40" />
+                        <span className="text-rose/60 text-[10px] tracking-[0.25em] uppercase font-medium">{combo.category}</span>
+                      </div>
+                      <h3 className="font-display text-2xl text-charcoal mb-2">{combo.name}</h3>
+                      <p className="text-stone/50 text-sm leading-relaxed mb-6 line-clamp-3">{combo.description}</p>
+                      <button onClick={() => handleComboSelect(combo._id)}
+                        className="inline-flex items-center gap-2 text-sm font-medium text-charcoal hover:text-rose transition-colors group/btn">
+                        <span className="border-b border-charcoal/20 group-hover/btn:border-rose pb-0.5">Elegir para mi evento</span>
+                        <svg className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
