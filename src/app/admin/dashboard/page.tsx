@@ -122,17 +122,23 @@ export default function Dashboard() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-ivory flex items-center justify-center">
-        <div className="font-display text-2xl text-rose">Cargando...</div>
+        <div className="flex items-center gap-3">
+          <svg className="animate-spin w-5 h-5 text-rose" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span className="font-display text-xl text-stone">Cargando...</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-ivory-alt">
-      <header className="bg-white border-b border-stone/10 px-6 lg:px-10 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+    <div className="min-h-screen bg-ivory">
+      <header className="bg-white/90 backdrop-blur-md border-b border-stone/10 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-4 flex items-center justify-between">
           <div>
-            <a href="/admin/dashboard" className="font-display text-xl text-charcoal tracking-wide">
+            <a href="/admin/dashboard" className="font-display text-xl text-charcoal tracking-wide hover:text-rose transition-colors">
               Panel de Administración
             </a>
             <p className="text-stone/40 text-xs mt-0.5">Follaje & Listón</p>
@@ -140,12 +146,13 @@ export default function Dashboard() {
           <div className="flex items-center gap-4">
             {statusCounts && (
               <div className="hidden sm:flex items-center gap-3 text-xs font-medium">
-                <span className="text-amber-600">{statusCounts.pendiente} pend.</span>
-                <span className="text-emerald-600">{statusCounts.confirmado} conf.</span>
-                <span className="text-rose-600">{statusCounts.cancelado} canc.</span>
+                <span className="px-2 py-1 rounded-full bg-amber-50 text-amber-600">{statusCounts.pendiente} pend.</span>
+                <span className="px-2 py-1 rounded-full bg-emerald-50 text-emerald-600">{statusCounts.confirmado} conf.</span>
+                <span className="px-2 py-1 rounded-full bg-rose-50 text-rose-600">{statusCounts.cancelado} canc.</span>
               </div>
             )}
-            <button onClick={() => signOut()} className="text-xs text-stone/40 hover:text-rose transition-colors tracking-wider uppercase font-medium">
+            <button onClick={() => signOut()}
+              className="text-xs text-stone/40 hover:text-rose transition-colors tracking-wider uppercase font-medium bg-ivory/80 px-4 py-2 rounded-full">
               Salir
             </button>
           </div>
@@ -153,7 +160,7 @@ export default function Dashboard() {
       </header>
 
       <div className="max-w-7xl mx-auto px-6 lg:px-10 py-8">
-        <div className="flex flex-wrap gap-1 mb-8 border-b border-stone/10 pb-4">
+        <div className="flex flex-wrap gap-2 mb-8">
           {[
             { key: "citas" as Tab, label: "Citas" },
             { key: "calendario" as Tab, label: "Calendario" },
@@ -162,9 +169,8 @@ export default function Dashboard() {
           ].map((t) => (
             <button key={t.key} onClick={() => setTab(t.key)}
               className={`px-5 py-2.5 text-xs tracking-widest uppercase font-medium transition-all rounded-full ${
-                tab === t.key ? "bg-rose text-white shadow-sm shadow-rose/20" : "text-stone/50 hover:text-rose"
-              }`}
-            >
+                tab === t.key ? "bg-charcoal text-white shadow-lg" : "bg-white text-stone/50 border border-stone/10 hover:border-rose hover:text-rose"
+              }`}>
               {t.label}
             </button>
           ))}
@@ -173,42 +179,47 @@ export default function Dashboard() {
         {tab === "calendario" && (
           <div className="max-w-md mx-auto">
             <div className="flex items-center justify-between mb-6">
-              <button onClick={handlePrevMonth} className="text-stone/40 hover:text-rose transition-colors p-2">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <button onClick={handlePrevMonth}
+                className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white transition-colors text-stone/40 hover:text-rose">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M15 18l-6-6 6-6" />
                 </svg>
               </button>
               <h3 className="font-display text-2xl text-charcoal">{MONTHS[currentMonth]} {currentYear}</h3>
-              <button onClick={handleNextMonth} className="text-stone/40 hover:text-rose transition-colors p-2">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <button onClick={handleNextMonth}
+                className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white transition-colors text-stone/40 hover:text-rose">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M9 18l6-6-6-6" />
                 </svg>
               </button>
             </div>
-            <div className="grid grid-cols-7 gap-px bg-stone/10 rounded-sm overflow-hidden">
-              {DAYS.map((d) => (
-                <div key={d} className="bg-white p-2 text-center text-[10px] tracking-widest uppercase text-stone/40 font-medium">
-                  {d}
-                </div>
-              ))}
-              {Array.from({ length: firstDay }).map((_, i) => (
-                <div key={`e-${i}`} className="bg-white/50 p-2 min-h-[70px]" />
-              ))}
-              {Array.from({ length: daysInMonth }).map((_, i) => {
-                const day = i + 1;
-                const date = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                const hasEvents = bookingDates.has(date);
-                return (
-                  <button key={day} onClick={() => handleDayClick(day)}
-                    className={`bg-white p-2 min-h-[70px] text-left transition-colors hover:bg-rose-light/10 ${
-                      selectedDay === date ? "ring-2 ring-rose ring-inset" : ""
-                    }`}
-                  >
-                    <span className={`text-sm ${hasEvents ? "text-rose font-semibold" : "text-stone/60"}`}>{day}</span>
-                    {hasEvents && <div className="w-1.5 h-1.5 bg-rose rounded-full mt-1" />}
-                  </button>
-                );
-              })}
+            <div className="bg-white rounded-2xl border border-stone/5 shadow-sm overflow-hidden">
+              <div className="grid grid-cols-7 bg-ivory/80">
+                {DAYS.map((d) => (
+                  <div key={d} className="p-3 text-center text-[10px] tracking-widest uppercase text-stone/40 font-medium">
+                    {d}
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7">
+                {Array.from({ length: firstDay }).map((_, i) => (
+                  <div key={`e-${i}`} className="p-2 min-h-[72px] bg-white/50" />
+                ))}
+                {Array.from({ length: daysInMonth }).map((_, i) => {
+                  const day = i + 1;
+                  const date = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                  const hasEvents = bookingDates.has(date);
+                  return (
+                    <button key={day} onClick={() => handleDayClick(day)}
+                      className={`p-2 min-h-[72px] text-left transition-all hover:bg-rose/5 ${
+                        selectedDay === date ? "bg-rose/10 ring-2 ring-rose ring-inset" : "bg-white"
+                      }`}>
+                      <span className={`text-sm font-medium ${hasEvents ? "text-rose" : "text-stone/60"}`}>{day}</span>
+                      {hasEvents && <div className="w-2 h-2 bg-rose rounded-full mt-1.5 mx-auto" />}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             {selectedDay && (
               <p className="text-center text-xs text-stone/40 mt-4">
@@ -224,30 +235,30 @@ export default function Dashboard() {
               <h3 className="font-display text-2xl text-charcoal mb-6">
                 {editingCombo ? "Editar Combo" : "Nuevo Combo"}
               </h3>
-              <form onSubmit={handleComboSubmit} className="bg-white rounded-sm border border-stone/5 p-6 space-y-4">
+              <form onSubmit={handleComboSubmit} className="bg-white rounded-2xl border border-stone/5 shadow-sm p-8 space-y-4">
                 <input placeholder="Nombre del combo" value={comboForm.name}
                   onChange={(e) => setComboForm((p) => ({ ...p, name: e.target.value }))} required
-                  className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm" />
+                  className="w-full bg-ivory/80 border border-stone/20 rounded-xl px-4 py-3.5 text-charcoal focus:outline-none focus:border-rose focus:ring-2 focus:ring-rose/10 transition-all text-sm" />
                 <input placeholder="Categoría (ej. Bodas)" value={comboForm.category}
                   onChange={(e) => setComboForm((p) => ({ ...p, category: e.target.value }))} required
-                  className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm" />
+                  className="w-full bg-ivory/80 border border-stone/20 rounded-xl px-4 py-3.5 text-charcoal focus:outline-none focus:border-rose focus:ring-2 focus:ring-rose/10 transition-all text-sm" />
                 <input placeholder="Precio (ej. $4,500)" value={comboForm.price}
                   onChange={(e) => setComboForm((p) => ({ ...p, price: e.target.value }))} required
-                  className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm" />
+                  className="w-full bg-ivory/80 border border-stone/20 rounded-xl px-4 py-3.5 text-charcoal focus:outline-none focus:border-rose focus:ring-2 focus:ring-rose/10 transition-all text-sm" />
                 <textarea placeholder="Descripción" value={comboForm.description}
                   onChange={(e) => setComboForm((p) => ({ ...p, description: e.target.value }))} required rows={3}
-                  className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm resize-none" />
+                  className="w-full bg-ivory/80 border border-stone/20 rounded-xl px-4 py-3.5 text-charcoal focus:outline-none focus:border-rose focus:ring-2 focus:ring-rose/10 transition-all text-sm resize-none" />
                 <input placeholder="URL de imagen (opcional)" value={comboForm.imageUrl}
                   onChange={(e) => setComboForm((p) => ({ ...p, imageUrl: e.target.value }))}
-                  className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm" />
+                  className="w-full bg-ivory/80 border border-stone/20 rounded-xl px-4 py-3.5 text-charcoal focus:outline-none focus:border-rose focus:ring-2 focus:ring-rose/10 transition-all text-sm" />
                 <div className="flex gap-3 pt-2">
                   <button type="submit"
-                    className="bg-rose text-white px-6 py-2.5 text-xs tracking-widest uppercase font-medium hover:bg-rose-dark transition-all rounded-sm">
+                    className="bg-charcoal text-white px-6 py-3 text-xs tracking-widest uppercase font-medium hover:bg-rose transition-all rounded-xl">
                     {editingCombo ? "Guardar cambios" : "Crear combo"}
                   </button>
                   {editingCombo && (
                     <button type="button" onClick={() => { setEditingCombo(null); setComboForm({ name: "", category: "", price: "", description: "", imageUrl: "" }); }}
-                      className="border border-stone/20 text-stone px-6 py-2.5 text-xs tracking-widest uppercase font-medium hover:border-rose hover:text-rose transition-all rounded-sm">
+                      className="border border-stone/20 text-stone px-6 py-3 text-xs tracking-widest uppercase font-medium hover:border-rose hover:text-rose transition-all rounded-xl">
                       Cancelar
                     </button>
                   )}
@@ -257,23 +268,25 @@ export default function Dashboard() {
             <div>
               <h3 className="font-display text-2xl text-charcoal mb-6">Combos Existentes</h3>
               {(!combos || combos.length === 0) ? (
-                <p className="text-stone/50 text-sm">Todavía no hay combos registrados.</p>
+                <div className="text-center py-12 bg-white rounded-2xl border border-stone/5">
+                  <p className="text-stone/40 font-display text-xl">Todavía no hay combos registrados.</p>
+                </div>
               ) : (
                 <div className="space-y-3">
                   {combos.map((combo) => (
-                    <div key={combo._id} className="bg-white rounded-sm border border-stone/5 p-5 flex items-center justify-between gap-4 card-hover">
+                    <div key={combo._id} className="bg-white rounded-2xl border border-stone/5 p-5 flex items-center justify-between gap-4 shadow-sm hover:shadow-md transition-shadow">
                       <div className="flex-1 min-w-0">
                         <p className="font-display text-lg text-charcoal">{combo.name}</p>
-                        <p className="text-xs text-stone/50">{combo.category} &mdash; {combo.price}</p>
+                        <p className="text-xs text-stone/50 mt-0.5">{combo.category} &mdash; {combo.price}</p>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
-                        <span className={`text-[10px] tracking-wider uppercase font-medium px-2 py-0.5 rounded-full ${
+                        <span className={`text-[10px] tracking-wider uppercase font-medium px-2.5 py-1 rounded-full ${
                           combo.active ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
                         }`}>
                           {combo.active ? "Activo" : "Inactivo"}
                         </span>
-                        <button onClick={() => startEditCombo(combo)} className="text-xs text-stone/40 hover:text-rose transition-colors">Editar</button>
-                        <button onClick={() => deleteCombo({ id: combo._id as any })} className="text-xs text-stone/40 hover:text-rose transition-colors">Eliminar</button>
+                        <button onClick={() => startEditCombo(combo)} className="text-xs text-stone/40 hover:text-rose transition-colors font-medium">Editar</button>
+                        <button onClick={() => deleteCombo({ id: combo._id as any })} className="text-xs text-stone/40 hover:text-rose transition-colors font-medium">Eliminar</button>
                       </div>
                     </div>
                   ))}
@@ -286,19 +299,19 @@ export default function Dashboard() {
         {tab === "nueva" && (
           <div className="max-w-lg mx-auto">
             <h3 className="font-display text-2xl text-charcoal mb-6">Registrar Cita Manual</h3>
-            <form onSubmit={handleCreateBooking} className="bg-white rounded-sm border border-stone/5 p-8 space-y-4">
+            <form onSubmit={handleCreateBooking} className="bg-white rounded-2xl border border-stone/5 shadow-sm p-8 space-y-4">
               <input placeholder="Nombre del cliente" value={newBooking.name}
                 onChange={(e) => setNewBooking((p) => ({ ...p, name: e.target.value }))} required
-                className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm" />
+                className="w-full bg-ivory/80 border border-stone/20 rounded-xl px-4 py-3.5 text-charcoal focus:outline-none focus:border-rose focus:ring-2 focus:ring-rose/10 transition-all text-sm" />
               <input placeholder="Teléfono" value={newBooking.phone}
                 onChange={(e) => setNewBooking((p) => ({ ...p, phone: e.target.value }))} required
-                className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm" />
+                className="w-full bg-ivory/80 border border-stone/20 rounded-xl px-4 py-3.5 text-charcoal focus:outline-none focus:border-rose focus:ring-2 focus:ring-rose/10 transition-all text-sm" />
               <input type="date" value={newBooking.date}
                 onChange={(e) => setNewBooking((p) => ({ ...p, date: e.target.value }))} required
-                className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm [color-scheme:light]" />
+                className="w-full bg-ivory/80 border border-stone/20 rounded-xl px-4 py-3.5 text-charcoal focus:outline-none focus:border-rose focus:ring-2 focus:ring-rose/10 transition-all text-sm [color-scheme:light]" />
               <select value={newBooking.comboId}
                 onChange={(e) => setNewBooking((p) => ({ ...p, comboId: e.target.value }))} required
-                className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm">
+                className="w-full bg-ivory/80 border border-stone/20 rounded-xl px-4 py-3.5 text-charcoal focus:outline-none focus:border-rose focus:ring-2 focus:ring-rose/10 transition-all text-sm">
                 <option value="" className="bg-white">Seleccionar combo</option>
                 {combos?.map((c) => (
                   <option key={c._id} value={c._id} className="bg-white">{c.name}</option>
@@ -306,16 +319,16 @@ export default function Dashboard() {
               </select>
               <textarea placeholder="Notas (opcional)" value={newBooking.notes}
                 onChange={(e) => setNewBooking((p) => ({ ...p, notes: e.target.value }))} rows={3}
-                className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm resize-none" />
+                className="w-full bg-ivory/80 border border-stone/20 rounded-xl px-4 py-3.5 text-charcoal focus:outline-none focus:border-rose focus:ring-2 focus:ring-rose/10 transition-all text-sm resize-none" />
               <select value={newBooking.status}
                 onChange={(e) => setNewBooking((p) => ({ ...p, status: e.target.value as any }))}
-                className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm">
+                className="w-full bg-ivory/80 border border-stone/20 rounded-xl px-4 py-3.5 text-charcoal focus:outline-none focus:border-rose focus:ring-2 focus:ring-rose/10 transition-all text-sm">
                 <option value="pendiente" className="bg-white">Pendiente</option>
                 <option value="confirmado" className="bg-white">Confirmado</option>
                 <option value="cancelado" className="bg-white">Cancelado</option>
               </select>
               <button type="submit"
-                className="w-full bg-rose text-white px-8 py-3 text-sm tracking-wider uppercase font-medium hover:bg-rose-dark transition-all hover:shadow-lg hover:shadow-rose/25 rounded-sm">
+                className="w-full bg-charcoal text-white rounded-xl px-8 py-3.5 text-sm tracking-wider uppercase font-medium hover:bg-rose transition-all duration-300">
                 Registrar Cita
               </button>
             </form>
@@ -329,7 +342,7 @@ export default function Dashboard() {
                 {selectedDay ? `Citas del ${selectedDay}` : "Todas las Citas"}
               </h3>
               <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-white border border-stone/20 px-3 py-1.5 text-xs text-charcoal focus:outline-none focus:border-rose rounded-sm">
+                className="bg-white border border-stone/20 rounded-xl px-4 py-2 text-xs text-charcoal focus:outline-none focus:border-rose">
                 <option value="todas" className="bg-white">Todos los estados</option>
                 <option value="pendiente" className="bg-white">Pendiente</option>
                 <option value="confirmado" className="bg-white">Confirmado</option>
@@ -338,9 +351,9 @@ export default function Dashboard() {
             </div>
 
             {(!filteredBookings || filteredBookings.length === 0) ? (
-              <div className="text-center py-20 bg-white rounded-sm border border-stone/5">
-                <div className="w-12 h-12 bg-rose-light/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 text-rose/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <div className="text-center py-20 bg-white rounded-2xl border border-stone/5 shadow-sm">
+                <div className="w-16 h-16 bg-rose/5 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                  <svg className="w-8 h-8 text-rose/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
                 </div>
@@ -348,46 +361,46 @@ export default function Dashboard() {
                 <p className="text-stone/30 text-sm mt-1">Las citas que los clientes agenden aparecerán aquí.</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {filteredBookings.map((booking) => {
                   const combo = combos?.find((c) => c._id === booking.comboId);
                   return (
-                    <div key={booking._id} className="bg-white rounded-sm border border-stone/5 p-5 card-hover">
+                    <div key={booking._id} className="bg-white rounded-2xl border border-stone/5 p-6 shadow-sm hover:shadow-md transition-shadow">
                       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 mb-1.5 flex-wrap">
                             <h4 className="font-display text-lg text-charcoal">{booking.name}</h4>
-                            <span className={`text-[10px] tracking-wider uppercase font-medium px-2 py-0.5 rounded-full border ${STATUS_STYLES[booking.status]}`}>
+                            <span className={`text-[10px] tracking-wider uppercase font-medium px-2.5 py-1 rounded-full border ${STATUS_STYLES[booking.status]}`}>
                               {STATUS_LABELS[booking.status]}
                             </span>
                           </div>
                           <p className="text-xs text-stone/50">{booking.date} &mdash; {booking.phone}</p>
-                          {combo && <p className="text-xs text-rose/70 mt-1">{combo.name} &mdash; {combo.price}</p>}
-                          {booking.notes && <p className="text-xs text-stone/40 mt-1 italic">&ldquo;{booking.notes}&rdquo;</p>}
+                          {combo && <p className="text-xs text-rose/70 mt-1">{combo.name}</p>}
+                          {booking.notes && <p className="text-xs text-stone/40 mt-1.5 italic bg-ivory/50 rounded-lg px-3 py-2 inline-block">&ldquo;{booking.notes}&rdquo;</p>}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           {booking.status !== "confirmado" && (
                             <button onClick={() => updateStatus({ id: booking._id as any, status: "confirmado" })}
-                              className="text-xs border border-emerald-200 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-sm hover:bg-emerald-100 transition-colors font-medium">
+                              className="text-xs border border-emerald-200 bg-emerald-50 text-emerald-700 px-3.5 py-2 rounded-xl hover:bg-emerald-100 transition-colors font-medium">
                               Confirmar
                             </button>
                           )}
                           {booking.status !== "cancelado" && (
                             <button onClick={() => updateStatus({ id: booking._id as any, status: "cancelado" })}
-                              className="text-xs border border-rose-200 bg-rose-50 text-rose-700 px-3 py-1.5 rounded-sm hover:bg-rose-100 transition-colors font-medium">
+                              className="text-xs border border-rose-200 bg-rose-50 text-rose-700 px-3.5 py-2 rounded-xl hover:bg-rose-100 transition-colors font-medium">
                               Cancelar
                             </button>
                           )}
                           <button onClick={() => {
                             const msg = `Hola ${booking.name}, tu cita en Follaje & Listón para el ${booking.date} ha sido ${booking.status === "confirmado" ? "confirmada" : "actualizada"}.`;
                             window.open(`https://wa.me/${booking.phone}?text=${encodeURIComponent(msg)}`, "_blank");
-                          }} className="text-stone/40 hover:text-rose transition-colors p-1" title="Enviar WhatsApp">
+                          }} className="w-9 h-9 flex items-center justify-center rounded-xl text-stone/40 hover:text-rose hover:bg-rose/5 transition-all" title="Enviar WhatsApp">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6" />
                             </svg>
                           </button>
                           <button onClick={() => removeBooking({ id: booking._id as any })}
-                            className="text-stone/30 hover:text-rose transition-colors p-1">
+                            className="w-9 h-9 flex items-center justify-center rounded-xl text-stone/30 hover:text-rose hover:bg-rose/5 transition-all">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                               <path d="M18 6L6 18M6 6l12 12" />
                             </svg>
