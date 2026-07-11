@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
@@ -40,8 +40,102 @@ function Leaf({ className = "" }: { className?: string }) {
   );
 }
 
+function FloatingOrb({ className = "", color = "rose" }: { className?: string; color?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const x = Math.random() * 100;
+    const y = Math.random() * 100;
+    el.style.left = `${x}%`;
+    el.style.top = `${y}%`;
+    const duration = 6 + Math.random() * 4;
+    const delay = Math.random() * 5;
+    el.animate([
+      { transform: "translateY(0px) scale(1)", opacity: 0.15 },
+      { transform: "translateY(-20px) scale(1.1)", opacity: 0.25 },
+      { transform: "translateY(0px) scale(1)", opacity: 0.15 },
+    ], { duration: duration * 1000, iterations: Infinity, delay: delay * 1000, easing: "ease-in-out" });
+  }, []);
+  return (
+    <div ref={ref} className={`absolute w-48 h-48 rounded-full blur-3xl pointer-events-none ${className}`}
+      style={{ background: color === "gold" ? "radial-gradient(circle, rgba(212,175,55,0.4) 0%, transparent 70%)" : color === "sage" ? "radial-gradient(circle, rgba(143,175,159,0.4) 0%, transparent 70%)" : "radial-gradient(circle, rgba(200,142,167,0.4) 0%, transparent 70%)" }} />
+  );
+}
+
+function use3DTilt(ref: React.RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = el.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const rotateX = ((y - centerY) / centerY) * -8;
+      const rotateY = ((x - centerX) / centerX) * 8;
+      el.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02,1.02,1.02)`;
+    };
+    const handleMouseLeave = () => {
+      el.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)";
+    };
+    el.addEventListener("mousemove", handleMouseMove);
+    el.addEventListener("mouseleave", handleMouseLeave);
+    return () => {
+      el.removeEventListener("mousemove", handleMouseMove);
+      el.removeEventListener("mouseleave", handleMouseLeave);
+    };
+  }, [ref]);
+}
+
+function ComboCard({ combo, onSelect }: { combo: any; onSelect: (id: string) => void }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  use3DTilt(cardRef);
+  const [imgError, setImgError] = useState(false);
+  const showFlower = !combo.imageUrl || imgError;
+
+  return (
+    <div ref={cardRef}
+      className="group bg-white rounded-2xl overflow-hidden border border-stone/5 shadow-sm hover:shadow-2xl hover:shadow-rose/10 transition-all duration-500"
+      style={{ transformStyle: "preserve-3d" }}>
+      <div className="relative h-56 overflow-hidden">
+        {showFlower ? (
+          <div className="w-full h-full bg-gradient-to-br from-rose/5 via-ivory to-sage/5 flex items-center justify-center">
+            <Flower className="w-24 h-24 text-rose/10 group-hover:scale-110 group-hover:text-rose/20 transition-all duration-700" />
+          </div>
+        ) : (
+          <img src={combo.imageUrl} alt={combo.name}
+            onError={() => setImgError(true)}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-1.5 text-sm font-semibold text-rose rounded-full shadow-sm">
+          {combo.price}
+        </div>
+      </div>
+      <div className="p-7 lg:p-8">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="w-4 h-px bg-rose/40" />
+          <span className="text-rose/60 text-[10px] tracking-[0.25em] uppercase font-medium">{combo.category}</span>
+        </div>
+        <h3 className="font-display text-2xl text-charcoal mb-2">{combo.name}</h3>
+        <p className="text-stone/50 text-sm leading-relaxed mb-6 line-clamp-3">{combo.description}</p>
+        <button onClick={() => onSelect(combo._id)}
+          className="inline-flex items-center gap-2 text-sm font-medium text-charcoal hover:text-rose transition-colors group/btn">
+          <span className="border-b border-charcoal/20 group-hover/btn:border-rose pb-0.5">Elegir para mi evento</span>
+          <svg className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const combos = useQuery(api.combos.list);
+  const content = useQuery(api.content.getAll);
   const createBooking = useMutation(api.bookings.create);
   const seedCombos = useMutation(api.seed.seedCombos);
 
@@ -64,6 +158,8 @@ export default function Home() {
   const filtered = selectedCategory === "todas"
     ? combos
     : combos?.filter((c) => c.category === selectedCategory);
+
+  const t = (key: string, fallback: string) => content?.[key] ?? fallback;
 
   const handleComboSelect = (comboId: string) => {
     setFormData((prev) => ({ ...prev, comboId }));
@@ -99,8 +195,8 @@ export default function Home() {
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? "bg-white/90 backdrop-blur-md shadow-sm shadow-rose/5" : "bg-transparent"
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        scrolled ? "bg-white/90 backdrop-blur-lg shadow-lg shadow-rose/5" : "bg-transparent"
       }`}>
         <div className="max-w-7xl mx-auto px-6 lg:px-10 h-20 flex items-center justify-between">
           <a href="#" className={`font-display text-2xl lg:text-3xl tracking-wide transition-colors ${
@@ -140,38 +236,44 @@ export default function Home() {
       </header>
 
       <main>
-        <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-charcoal via-[#1a1a2e] to-[#16213e]">
-          <div className="absolute inset-0 opacity-[0.08]">
-            <Flower className="absolute top-20 right-10 w-48 h-48 text-rose" />
-            <Leaf className="absolute bottom-20 left-10 w-56 h-56 text-sage" />
-            <Flower className="absolute top-1/2 left-1/4 w-32 h-32 text-gold" />
-            <Leaf className="absolute bottom-1/3 right-1/4 w-36 h-36 text-rose" />
+        <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-[#0a0a1a] via-[#1a1a2e] to-[#0d1b2a]">
+          <FloatingOrb color="rose" />
+          <FloatingOrb color="gold" />
+          <FloatingOrb color="sage" />
+          <div className="absolute inset-0 opacity-[0.06]">
+            <Flower className="absolute top-20 right-10 w-48 h-48 text-rose animate-float-slow" />
+            <Leaf className="absolute bottom-20 left-10 w-56 h-56 text-sage animate-float-medium" />
+            <Flower className="absolute top-1/2 left-1/4 w-32 h-32 text-gold animate-float-fast" />
+            <Leaf className="absolute bottom-1/3 right-1/4 w-36 h-36 text-rose animate-float-slow" />
           </div>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(200,142,167,0.05)_0%,_transparent_70%)]" />
           <div className="absolute inset-0 bg-gradient-to-t from-ivory/5 via-transparent to-black/20" />
           <div className="relative max-w-7xl mx-auto px-6 lg:px-10 w-full pt-24 pb-20">
             <div className="max-w-4xl mx-auto text-center">
-              <div className="inline-flex items-center gap-3 mb-6">
+              <div className="inline-flex items-center gap-3 mb-6 animate-fade-in">
                 <span className="w-8 h-px bg-rose/50" />
-                <span className="text-rose/80 text-xs tracking-[0.3em] uppercase font-medium">Decoración Boutique</span>
+                <span className="text-rose/80 text-xs tracking-[0.3em] uppercase font-medium">{t("hero.tagline", "Decoración Boutique")}</span>
                 <span className="w-8 h-px bg-rose/50" />
               </div>
-              <h1 className="font-display text-5xl sm:text-7xl lg:text-8xl text-white leading-[0.92] mb-6">
-                Donde tus sueños
+              <h1 className="font-display text-5xl sm:text-7xl lg:text-8xl text-white leading-[0.92] mb-6 animate-fade-in-up"
+                style={{ animationDelay: "0.1s" }}>
+                {t("hero.title", "Donde tus sueños")}
                 <br />
                 <span className="bg-gradient-to-r from-rose via-gold to-sage bg-clip-text text-transparent">
-                  florecen
+                  {t("hero.highlight", "florecen")}
                 </span>
                 <br />
-                en cada detalle
+                {t("hero.subtitle", "en cada detalle")}
               </h1>
-              <p className="text-white/50 text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-light">
-                Transformamos tus momentos especiales en experiencias inolvidables con diseños
-                únicos y personalizados para cada celebración.
+              <p className="text-white/50 text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-light animate-fade-in-up"
+                style={{ animationDelay: "0.2s" }}>
+                {t("hero.description", "Transformamos tus momentos especiales en experiencias inolvidables con diseños únicos y personalizados para cada celebración.")}
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up"
+                style={{ animationDelay: "0.3s" }}>
                 <a href="#combos"
                   className="group bg-rose text-white px-8 py-3.5 text-sm tracking-wider uppercase font-medium hover:bg-rose-dark transition-all duration-300 inline-flex items-center justify-center gap-2 rounded-full hover:shadow-xl hover:shadow-rose/25">
-                  Ver Paquetes
+                  {t("hero.cta", "Ver Paquetes")}
                   <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
@@ -192,11 +294,11 @@ export default function Home() {
         <section id="combos" className="py-24 lg:py-32 px-6 lg:px-10 bg-ivory">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <span className="text-rose text-xs tracking-[0.3em] uppercase font-medium">Nuestros</span>
-              <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl text-charcoal mt-3 mb-5">Paquetes</h2>
+              <span className="text-rose text-xs tracking-[0.3em] uppercase font-medium">{t("paquetes.section_label", "Nuestros")}</span>
+              <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl text-charcoal mt-3 mb-5">{t("paquetes.section_title", "Paquetes")}</h2>
               <div className="w-20 h-0.5 bg-gradient-to-r from-rose via-gold to-sage mx-auto rounded-full" />
               <p className="text-stone/50 mt-5 max-w-lg mx-auto">
-                Cada paquete incluye montaje, desmontaje y asesoría personalizada sin costo extra.
+                {t("paquetes.section_desc", "Cada paquete incluye montaje, desmontaje y asesoría personalizada sin costo extra.")}
               </p>
             </div>
 
@@ -214,7 +316,7 @@ export default function Home() {
             </div>
 
             {!combos ? (
-              <div className="col-span-full flex justify-center py-16">
+              <div className="flex justify-center py-16">
                 <div className="flex items-center gap-3">
                   <svg className="animate-spin w-5 h-5 text-rose" viewBox="0 0 24 24" fill="none">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -224,60 +326,39 @@ export default function Home() {
                 </div>
               </div>
             ) : filtered?.length === 0 ? (
-              <div className="col-span-full text-center py-16">
+              <div className="text-center py-16">
                 <p className="text-stone/40 font-display text-xl">No hay paquetes en esta categoría</p>
               </div>
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filtered?.map((combo) => (
-                  <div key={combo._id}
-                    className="group bg-white rounded-2xl overflow-hidden border border-stone/5 shadow-sm hover:shadow-xl hover:shadow-rose/5 transition-all duration-500">
-                    <div className="relative h-56 bg-gradient-to-br from-rose/5 via-ivory to-sage/5 flex items-center justify-center overflow-hidden">
-                      <Flower className="w-24 h-24 text-rose/10 group-hover:scale-110 group-hover:text-rose/20 transition-all duration-700" />
-                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-1.5 text-sm font-semibold text-rose rounded-full shadow-sm">
-                        {combo.price}
-                      </div>
-                    </div>
-                    <div className="p-7 lg:p-8">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="w-4 h-px bg-rose/40" />
-                        <span className="text-rose/60 text-[10px] tracking-[0.25em] uppercase font-medium">{combo.category}</span>
-                      </div>
-                      <h3 className="font-display text-2xl text-charcoal mb-2">{combo.name}</h3>
-                      <p className="text-stone/50 text-sm leading-relaxed mb-6 line-clamp-3">{combo.description}</p>
-                      <button onClick={() => handleComboSelect(combo._id)}
-                        className="inline-flex items-center gap-2 text-sm font-medium text-charcoal hover:text-rose transition-colors group/btn">
-                        <span className="border-b border-charcoal/20 group-hover/btn:border-rose pb-0.5">Elegir para mi evento</span>
-                        <svg className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M5 12h14M12 5l7 7-7 7" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
+                  <ComboCard key={combo._id} combo={combo} onSelect={handleComboSelect} />
                 ))}
               </div>
             )}
           </div>
         </section>
 
-        <section className="relative py-24 lg:py-28 overflow-hidden bg-gradient-to-br from-charcoal via-[#1a1a2e] to-[#16213e]">
+        <section className="relative py-24 lg:py-28 overflow-hidden bg-gradient-to-br from-[#0a0a1a] via-[#1a1a2e] to-[#0d1b2a]">
+          <FloatingOrb color="rose" />
+          <FloatingOrb color="gold" />
           <div className="absolute inset-0 opacity-[0.06]">
             <Flower className="absolute top-10 right-10 w-64 h-64 text-rose" />
             <Leaf className="absolute bottom-10 left-10 w-48 h-48 text-sage" />
           </div>
           <div className="relative max-w-4xl mx-auto px-6 lg:px-10 text-center">
-            <span className="text-sage/80 text-xs tracking-[0.3em] uppercase font-medium">¿Listo para tu evento?</span>
+            <span className="text-sage/80 text-xs tracking-[0.3em] uppercase font-medium">{t("cta.section_label", "¿Listo para tu evento?")}</span>
             <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl text-white mt-4 mb-6 leading-tight">
-              Hagamos algo hermoso
+              {t("cta.title", "Hagamos algo hermoso")}
               <br />
-              <span className="bg-gradient-to-r from-rose via-gold to-sage bg-clip-text text-transparent">juntos</span>
+              <span className="bg-gradient-to-r from-rose via-gold to-sage bg-clip-text text-transparent">{t("cta.highlight", "juntos")}</span>
             </h2>
             <p className="text-white/40 max-w-xl mx-auto mb-10 text-lg font-light">
-              Cuéntanos tu visión y crearemos una propuesta personalizada que supere tus expectativas.
+              {t("cta.description", "Cuéntanos tu visión y crearemos una propuesta personalizada que supere tus expectativas.")}
             </p>
             <a href="#booking-form"
               className="inline-flex items-center gap-2 bg-rose text-white px-8 py-3.5 text-sm tracking-wider uppercase font-medium hover:bg-rose-dark transition-all duration-300 rounded-full hover:shadow-xl hover:shadow-rose/25">
-              Solicitar Cotización
+              {t("cta.button", "Solicitar Cotización")}
             </a>
           </div>
         </section>
@@ -285,10 +366,10 @@ export default function Home() {
         <section id="booking-form" className="py-24 lg:py-32 px-6 lg:px-10 bg-ivory">
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-14">
-              <span className="text-rose text-xs tracking-[0.3em] uppercase font-medium">Agenda tu</span>
-              <h2 className="font-display text-4xl sm:text-5xl text-charcoal mt-3 mb-5">Cita</h2>
+              <span className="text-rose text-xs tracking-[0.3em] uppercase font-medium">{t("cita.section_label", "Agenda tu")}</span>
+              <h2 className="font-display text-4xl sm:text-5xl text-charcoal mt-3 mb-5">{t("cita.section_title", "Cita")}</h2>
               <div className="w-20 h-0.5 bg-gradient-to-r from-rose via-gold to-sage mx-auto rounded-full" />
-              <p className="text-stone/50 mt-5">Déjanos tus datos y te contactaremos para confirmar todos los detalles.</p>
+              <p className="text-stone/50 mt-5">{t("cita.section_desc", "Déjanos tus datos y te contactaremos para confirmar todos los detalles.")}</p>
             </div>
 
             {submitted ? (
@@ -342,7 +423,7 @@ export default function Home() {
                 </div>
                 <button type="submit"
                   className="w-full bg-charcoal text-white rounded-xl px-8 py-4 text-sm tracking-wider uppercase font-medium hover:bg-rose transition-all duration-300 hover:shadow-xl hover:shadow-rose/25">
-                  Agendar Cita
+                  {t("cita.submit", "Agendar Cita")}
                 </button>
               </form>
             )}
@@ -356,8 +437,8 @@ export default function Home() {
           </div>
           <div className="max-w-7xl mx-auto relative z-10">
             <div className="text-center mb-16">
-              <span className="text-gold/70 text-xs tracking-[0.3em] uppercase font-medium">Contáctanos</span>
-              <h2 className="font-display text-4xl sm:text-5xl text-charcoal mt-3 mb-5">Estamos aquí para ti</h2>
+              <span className="text-gold/70 text-xs tracking-[0.3em] uppercase font-medium">{t("contacto.section_label", "Contáctanos")}</span>
+              <h2 className="font-display text-4xl sm:text-5xl text-charcoal mt-3 mb-5">{t("contacto.section_title", "Estamos aquí para ti")}</h2>
               <div className="w-20 h-0.5 bg-gradient-to-r from-rose via-gold to-sage mx-auto rounded-full" />
             </div>
             <div className="grid sm:grid-cols-3 gap-8">
@@ -399,7 +480,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="bg-charcoal text-white/30 py-16 px-6 lg:px-10">
+      <footer className="bg-[#0a0a1a] text-white/30 py-16 px-6 lg:px-10">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
             <p className="font-display text-2xl text-white/40">

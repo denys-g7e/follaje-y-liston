@@ -24,15 +24,11 @@ export default function AdminLogin() {
       formData.append("password", password);
       formData.append("flow", step);
 
-      if (step === "signUp") {
-        await signIn("password", formData);
-        setSuccess("¡Cuenta creada con éxito! Iniciando sesión...");
-        setTimeout(() => {
-          window.location.href = "/admin/dashboard";
-        }, 1500);
-      } else {
-        await signIn("password", formData);
-      }
+      await signIn("password", formData);
+      setSuccess(step === "signUp" ? "¡Cuenta creada con éxito!" : "Inicio de sesión exitoso. Redirigiendo...");
+      setTimeout(() => {
+        window.location.href = "/admin/dashboard";
+      }, 1500);
     } catch (err: any) {
       const message = err?.message || "";
       if (message.includes("already exists")) {

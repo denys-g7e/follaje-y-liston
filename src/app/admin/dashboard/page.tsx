@@ -5,7 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useAuthActions, useConvexAuth } from "@convex-dev/auth/react";
 
-type Tab = "citas" | "calendario" | "combos" | "nueva";
+type Tab = "citas" | "calendario" | "combos" | "nueva" | "contenido";
 
 const MONTHS = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -26,6 +26,29 @@ const STATUS_LABELS: Record<string, string> = {
   cancelado: "Cancelado",
 };
 
+const DEFAULT_CONTENT: Record<string, string> = {
+  "hero.tagline": "Decoración Boutique",
+  "hero.title": "Donde tus sueños",
+  "hero.highlight": "florecen",
+  "hero.subtitle": "en cada detalle",
+  "hero.description": "Transformamos tus momentos especiales en experiencias inolvidables con diseños únicos y personalizados para cada celebración.",
+  "hero.cta": "Ver Paquetes",
+  "paquetes.section_label": "Nuestros",
+  "paquetes.section_title": "Paquetes",
+  "paquetes.section_desc": "Cada paquete incluye montaje, desmontaje y asesoría personalizada sin costo extra.",
+  "cta.section_label": "¿Listo para tu evento?",
+  "cta.title": "Hagamos algo hermoso",
+  "cta.highlight": "juntos",
+  "cta.description": "Cuéntanos tu visión y crearemos una propuesta personalizada que supere tus expectativas.",
+  "cta.button": "Solicitar Cotización",
+  "cita.section_label": "Agenda tu",
+  "cita.section_title": "Cita",
+  "cita.section_desc": "Déjanos tus datos y te contactaremos para confirmar todos los detalles.",
+  "cita.submit": "Agendar Cita",
+  "contacto.section_label": "Contáctanos",
+  "contacto.section_title": "Estamos aquí para ti",
+};
+
 export default function Dashboard() {
   const { signOut } = useAuthActions();
   const { isLoading } = useConvexAuth();
@@ -37,6 +60,10 @@ export default function Dashboard() {
   const createCombo = useMutation(api.combos.create);
   const updateCombo = useMutation(api.combos.update);
   const deleteCombo = useMutation(api.combos.remove);
+  const generateUploadUrl = useMutation(api.combos.generateUploadUrl);
+  const saveComboImage = useMutation(api.combos.saveComboImage);
+  const contentGetAll = useQuery(api.content.getAll);
+  const contentSet = useMutation(api.content.set);
   const adminCreate = useMutation(api.bookings.adminCreate);
 
   const [tab, setTab] = useState<Tab>("citas");
@@ -53,6 +80,8 @@ export default function Dashboard() {
     name: "", category: "", price: "", description: "", imageUrl: "", active: true,
   });
   const [editingCombo, setEditingCombo] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [contentDraft, setContentDraft] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -62,6 +91,10 @@ export default function Dashboard() {
       return () => clearTimeout(t);
     }
   }, [error, success]);
+
+  useEffect(() => {
+    setContentDraft({ ...DEFAULT_CONTENT, ...contentGetAll });
+  }, [contentGetAll]);
 
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
@@ -203,6 +236,7 @@ export default function Dashboard() {
             { key: "citas" as Tab, label: "Citas" },
             { key: "calendario" as Tab, label: "Calendario" },
             { key: "combos" as Tab, label: "Combos" },
+            { key: "contenido" as Tab, label: "Contenido" },
             { key: "nueva" as Tab, label: "+ Nueva Cita" },
           ].map((t) => (
             <button key={t.key} onClick={() => setTab(t.key)}
@@ -286,9 +320,49 @@ export default function Dashboard() {
                 <textarea placeholder="Descripción" value={comboForm.description}
                   onChange={(e) => setComboForm((p) => ({ ...p, description: e.target.value }))} required rows={3}
                   className="w-full bg-ivory/80 border border-stone/20 rounded-xl px-4 py-3.5 text-charcoal focus:outline-none focus:border-rose focus:ring-2 focus:ring-rose/10 transition-all text-sm resize-none" />
-                <input placeholder="URL de imagen (opcional)" value={comboForm.imageUrl}
-                  onChange={(e) => setComboForm((p) => ({ ...p, imageUrl: e.target.value }))}
-                  className="w-full bg-ivory/80 border border-stone/20 rounded-xl px-4 py-3.5 text-charcoal focus:outline-none focus:border-rose focus:ring-2 focus:ring-rose/10 transition-all text-sm" />
+                {uploading ? (
+                  <div className="flex items-center gap-3 text-sm text-stone/50 py-3">
+                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Subiendo imagen...
+                  </div>
+                ) : (
+                  <label className="flex items-center gap-3 text-sm text-stone/50 cursor-pointer hover:text-rose transition-colors py-2">
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                    </svg>
+                    <span>{comboForm.imageUrl ? "Cambiar imagen" : "Subir imagen"}</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setUploading(true);
+                      try {
+                        const url = await generateUploadUrl();
+                        const result = await fetch(url, { method: "POST", body: file });
+                        const { storageId } = await result.json();
+                        if (editingCombo) {
+                          await saveComboImage({ comboId: editingCombo as any, storageId });
+                        }
+                        setComboForm((p) => ({ ...p, imageUrl: URL.createObjectURL(file) }));
+                        setSuccess("Imagen subida correctamente");
+                      } catch (err: any) {
+                        setError(err.message || "Error al subir imagen");
+                      }
+                      setUploading(false);
+                    }} />
+                  </label>
+                )}
+                {comboForm.imageUrl && !uploading && (
+                  <div className="relative w-24 h-24 rounded-xl overflow-hidden border border-stone/10">
+                    <img src={comboForm.imageUrl} alt="" className="w-full h-full object-cover" />
+                    <button onClick={() => setComboForm((p) => ({ ...p, imageUrl: "" }))}
+                      className="absolute top-1 right-1 w-5 h-5 bg-white/80 rounded-full flex items-center justify-center text-stone/40 hover:text-rose text-xs">
+                      &times;
+                    </button>
+                  </div>
+                )}
                 {editingCombo && (
                   <label className="flex items-center gap-3 text-sm text-stone/60 cursor-pointer">
                     <input type="checkbox" checked={comboForm.active}
@@ -378,6 +452,36 @@ export default function Dashboard() {
                 Registrar Cita
               </button>
             </form>
+          </div>
+        )}
+
+        {tab === "contenido" && (
+          <div className="max-w-2xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-display text-2xl text-charcoal">Editar Contenido de la Página</h3>
+                <p className="text-stone/50 text-sm mt-1">Los cambios se reflejan inmediatamente en la página principal.</p>
+              </div>
+              <button onClick={async () => {
+                let count = 0;
+                for (const [key, value] of Object.entries(contentDraft)) {
+                  try { await contentSet({ key, value }); count++; } catch {}
+                }
+                setSuccess(`${count} textos guardados`);
+              }}
+                className="bg-charcoal text-white px-5 py-2.5 text-xs tracking-widest uppercase font-medium hover:bg-rose transition-all rounded-xl shrink-0">
+                Guardar Todo
+              </button>
+            </div>
+            <div className="space-y-3">
+              {Object.entries(contentDraft).map(([key, value]) => (
+                <div key={key} className="bg-white rounded-2xl border border-stone/5 shadow-sm p-5">
+                  <label className="block text-[10px] tracking-widest uppercase text-rose/60 mb-2 font-medium">{key}</label>
+                  <textarea value={value} onChange={(e) => setContentDraft((p) => ({ ...p, [key]: e.target.value }))} rows={2}
+                    className="w-full bg-ivory/80 border border-stone/20 rounded-xl px-4 py-2.5 text-charcoal focus:outline-none focus:border-rose focus:ring-2 focus:ring-rose/10 transition-all text-sm resize-none" />
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

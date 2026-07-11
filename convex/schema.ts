@@ -25,6 +25,10 @@ const schema = defineSchema({
     imageUrl: v.optional(v.string()),
     active: v.boolean(),
   }),
+  content: defineTable({
+    key: v.string(),
+    value: v.string(),
+  }).index("by_key", ["key"]),
 });
 
 export default schema;

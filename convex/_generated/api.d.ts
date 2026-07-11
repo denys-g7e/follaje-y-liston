@@ -11,6 +11,7 @@
 import type * as auth from "../auth.js";
 import type * as bookings from "../bookings.js";
 import type * as combos from "../combos.js";
+import type * as content from "../content.js";
 import type * as http from "../http.js";
 import type * as seed from "../seed.js";
 
@@ -24,6 +25,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   bookings: typeof bookings;
   combos: typeof combos;
+  content: typeof content;
   http: typeof http;
   seed: typeof seed;
 }>;

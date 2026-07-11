@@ -2,6 +2,29 @@ import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("No autenticado");
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+export const saveComboImage = mutation({
+  args: {
+    comboId: v.id("combos"),
+    storageId: v.id("_storage"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("No autenticado");
+    const url = await ctx.storage.getUrl(args.storageId);
+    if (!url) throw new Error("Error al obtener la URL de la imagen");
+    await ctx.db.patch(args.comboId, { imageUrl: url });
+  },
+});
+
 export const list = query({
   args: {},
   handler: async (ctx) => {
