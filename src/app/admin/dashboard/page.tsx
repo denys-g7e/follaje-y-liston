@@ -5,7 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useAuthActions, useConvexAuth } from "@convex-dev/auth/react";
 
-type Tab = "citas" | "calendario" | "combos" | "nueva" | "contenido";
+type Tab = "citas" | "calendario" | "combos" | "nueva" | "contenido" | "config";
 
 const MONTHS = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -237,6 +237,7 @@ export default function Dashboard() {
             { key: "calendario" as Tab, label: "Calendario" },
             { key: "combos" as Tab, label: "Combos" },
             { key: "contenido" as Tab, label: "Contenido" },
+            { key: "config" as Tab, label: "Configuración" },
             { key: "nueva" as Tab, label: "+ Nueva Cita" },
           ].map((t) => (
             <button key={t.key} onClick={() => setTab(t.key)}
@@ -479,6 +480,32 @@ export default function Dashboard() {
                   <label className="block text-[10px] tracking-widest uppercase text-rose/60 mb-2 font-medium">{key}</label>
                   <textarea value={value} onChange={(e) => setContentDraft((p) => ({ ...p, [key]: e.target.value }))} rows={2}
                     className="w-full bg-ivory/80 border border-stone/20 rounded-xl px-4 py-2.5 text-charcoal focus:outline-none focus:border-rose focus:ring-2 focus:ring-rose/10 transition-all text-sm resize-none" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {tab === "config" && (
+          <div className="max-w-2xl mx-auto">
+            <h3 className="font-display text-2xl text-charcoal mb-6">Configuración del Sitio</h3>
+            <p className="text-stone/50 text-sm mb-8">Editá los datos de contacto. Se actualizan al instante en la página.</p>
+            <div className="space-y-4">
+              {[
+                { key: "whatsapp.number", label: "Número de WhatsApp", desc: "Ej: 59177866543 (sin + ni espacios)", input: "tel" },
+                { key: "contact.phone", label: "Teléfono de contacto", desc: "Ej: +591 778 665 43", input: "tel" },
+                { key: "contact.location", label: "Cobertura / Ubicación", desc: "Ej: Santa Cruz · La Paz · Toda Bolivia", input: "text" },
+              ].map(({ key, label, desc, input }) => (
+                <div key={key} className="bg-white rounded-2xl border border-stone/5 shadow-sm p-6">
+                  <label className="block text-xs tracking-widest uppercase text-rose/60 mb-1 font-medium">{label}</label>
+                  <p className="text-[10px] text-stone/30 mb-3">{desc} — clave: <code className="bg-ivory px-1 rounded">{key}</code></p>
+                  <input type={input} value={contentDraft[key] || ""}
+                    onChange={(e) => setContentDraft((p) => ({ ...p, [key]: e.target.value }))}
+                    className="w-full bg-ivory/80 border border-stone/20 rounded-xl px-4 py-3 text-charcoal focus:outline-none focus:border-rose focus:ring-2 focus:ring-rose/10 transition-all text-sm" />
+                  <button onClick={async () => { try { await contentSet({ key, value: contentDraft[key] || "" }); setSuccess(`"${key}" guardado`); } catch (err: any) { setError(err.message); } }}
+                    className="mt-3 bg-charcoal text-white px-5 py-2 text-xs tracking-widest uppercase font-medium hover:bg-rose transition-all rounded-xl">
+                    Guardar
+                  </button>
                 </div>
               ))}
             </div>
