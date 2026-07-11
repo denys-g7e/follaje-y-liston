@@ -14,16 +14,16 @@ const MONTHS = [
 
 const DAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
+const STATUS_STYLES: Record<string, string> = {
+  pendiente: "bg-amber-50 text-amber-700 border-amber-200",
+  confirmado: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  cancelado: "bg-rose-50 text-rose-700 border-rose-200",
+};
+
 const STATUS_LABELS: Record<string, string> = {
   pendiente: "Pendiente",
   confirmado: "Confirmado",
   cancelado: "Cancelado",
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  pendiente: "border-l-dorado text-dorado",
-  confirmado: "border-l-green-500 text-green-400",
-  cancelado: "border-l-rosa text-rosa",
 };
 
 export default function Dashboard() {
@@ -45,8 +45,6 @@ export default function Dashboard() {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("todas");
 
-  const [showNewForm, setShowNewForm] = useState(false);
-
   const [newBooking, setNewBooking] = useState({
     name: "", phone: "", date: "", comboId: "", notes: "", status: "pendiente" as const,
   });
@@ -67,32 +65,20 @@ export default function Dashboard() {
   const filteredBookings = useMemo(() => {
     if (!bookings) return [];
     let result = bookings;
-    if (selectedDay) {
-      result = result.filter((b) => b.date === selectedDay);
-    }
-    if (statusFilter !== "todas") {
-      result = result.filter((b) => b.status === statusFilter);
-    }
+    if (selectedDay) result = result.filter((b) => b.date === selectedDay);
+    if (statusFilter !== "todas") result = result.filter((b) => b.status === statusFilter);
     return result.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [bookings, selectedDay, statusFilter]);
 
   const handlePrevMonth = () => {
-    if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear((y) => y - 1);
-    } else {
-      setCurrentMonth((m) => m - 1);
-    }
+    if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear((y) => y - 1); }
+    else { setCurrentMonth((m) => m - 1); }
     setSelectedDay(null);
   };
 
   const handleNextMonth = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear((y) => y + 1);
-    } else {
-      setCurrentMonth((m) => m + 1);
-    }
+    if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear((y) => y + 1); }
+    else { setCurrentMonth((m) => m + 1); }
     setSelectedDay(null);
   };
 
@@ -105,25 +91,18 @@ export default function Dashboard() {
   const handleCreateBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     await adminCreate({
-      name: newBooking.name,
-      phone: newBooking.phone,
-      date: newBooking.date,
-      comboId: newBooking.comboId as any,
-      notes: newBooking.notes || undefined,
+      name: newBooking.name, phone: newBooking.phone, date: newBooking.date,
+      comboId: newBooking.comboId as any, notes: newBooking.notes || undefined,
       status: newBooking.status,
     });
     setNewBooking({ name: "", phone: "", date: "", comboId: "", notes: "", status: "pendiente" });
-    setShowNewForm(false);
+    setTab("citas");
   };
 
   const handleComboSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingCombo) {
-      await updateCombo({
-        id: editingCombo as any,
-        ...comboForm,
-        active: true,
-      });
+      await updateCombo({ id: editingCombo as any, ...comboForm, active: true });
       setEditingCombo(null);
     } else {
       await createCombo(comboForm);
@@ -133,11 +112,8 @@ export default function Dashboard() {
 
   const startEditCombo = (combo: any) => {
     setComboForm({
-      name: combo.name,
-      category: combo.category,
-      price: combo.price,
-      description: combo.description,
-      imageUrl: combo.imageUrl || "",
+      name: combo.name, category: combo.category, price: combo.price,
+      description: combo.description, imageUrl: combo.imageUrl || "",
     });
     setEditingCombo(combo._id);
     setTab("combos");
@@ -145,55 +121,48 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-fondo flex items-center justify-center">
-        <div className="text-dorado font-display text-2xl">Cargando...</div>
+      <div className="min-h-screen bg-ivory flex items-center justify-center">
+        <div className="font-display text-2xl text-rose">Cargando...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-fondo">
-      <header className="border-b border-dorado/10 px-4 sm:px-8 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+    <div className="min-h-screen bg-ivory-alt">
+      <header className="bg-white border-b border-stone/10 px-6 lg:px-10 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
-            <a href="/admin/dashboard" className="font-display text-xl text-dorado tracking-wider">
+            <a href="/admin/dashboard" className="font-display text-xl text-charcoal tracking-wide">
               Panel de Administración
             </a>
-            <p className="text-crema/40 text-xs mt-0.5">Follaje & Listón</p>
+            <p className="text-stone/40 text-xs mt-0.5">Follaje & Listón</p>
           </div>
           <div className="flex items-center gap-4">
             {statusCounts && (
-              <div className="hidden sm:flex items-center gap-3 text-xs">
-                <span className="text-dorado">{statusCounts.pendiente} pend.</span>
-                <span className="text-green-400">{statusCounts.confirmado} conf.</span>
-                <span className="text-rosa">{statusCounts.cancelado} canc.</span>
+              <div className="hidden sm:flex items-center gap-3 text-xs font-medium">
+                <span className="text-amber-600">{statusCounts.pendiente} pend.</span>
+                <span className="text-emerald-600">{statusCounts.confirmado} conf.</span>
+                <span className="text-rose-600">{statusCounts.cancelado} canc.</span>
               </div>
             )}
-            <button
-              onClick={() => signOut()}
-              className="text-xs text-crema/40 hover:text-rosa transition-colors tracking-wider uppercase"
-            >
+            <button onClick={() => signOut()} className="text-xs text-stone/40 hover:text-rose transition-colors tracking-wider uppercase font-medium">
               Salir
             </button>
           </div>
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6">
-        <div className="flex flex-wrap gap-1 sm:gap-2 mb-8 border-b border-dorado/10 pb-4">
+      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-8">
+        <div className="flex flex-wrap gap-1 mb-8 border-b border-stone/10 pb-4">
           {[
-            { key: "citas", label: "Citas" },
-            { key: "calendario", label: "Calendario" },
-            { key: "combos", label: "Combos" },
-            { key: "nueva", label: "+ Nueva Cita" },
+            { key: "citas" as Tab, label: "Citas" },
+            { key: "calendario" as Tab, label: "Calendario" },
+            { key: "combos" as Tab, label: "Combos" },
+            { key: "nueva" as Tab, label: "+ Nueva Cita" },
           ].map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key as Tab)}
-              className={`px-4 py-2 text-xs tracking-widest uppercase transition-colors ${
-                tab === t.key
-                  ? "text-dorado border-b border-dorado"
-                  : "text-crema/40 hover:text-crema/70"
+            <button key={t.key} onClick={() => setTab(t.key)}
+              className={`px-5 py-2.5 text-xs tracking-widest uppercase font-medium transition-all rounded-full ${
+                tab === t.key ? "bg-rose text-white shadow-sm shadow-rose/20" : "text-stone/50 hover:text-rose"
               }`}
             >
               {t.label}
@@ -204,117 +173,81 @@ export default function Dashboard() {
         {tab === "calendario" && (
           <div className="max-w-md mx-auto">
             <div className="flex items-center justify-between mb-6">
-              <button onClick={handlePrevMonth} className="text-crema/50 hover:text-dorado transition-colors">
+              <button onClick={handlePrevMonth} className="text-stone/40 hover:text-rose transition-colors p-2">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M15 18l-6-6 6-6" />
                 </svg>
               </button>
-              <h3 className="font-display text-2xl text-dorado">
-                {MONTHS[currentMonth]} {currentYear}
-              </h3>
-              <button onClick={handleNextMonth} className="text-crema/50 hover:text-dorado transition-colors">
+              <h3 className="font-display text-2xl text-charcoal">{MONTHS[currentMonth]} {currentYear}</h3>
+              <button onClick={handleNextMonth} className="text-stone/40 hover:text-rose transition-colors p-2">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M9 18l6-6-6-6" />
                 </svg>
               </button>
             </div>
-            <div className="grid grid-cols-7 gap-px bg-dorado/20">
+            <div className="grid grid-cols-7 gap-px bg-stone/10 rounded-sm overflow-hidden">
               {DAYS.map((d) => (
-                <div key={d} className="bg-superficie p-2 text-center text-[10px] tracking-widest uppercase text-crema/40">
+                <div key={d} className="bg-white p-2 text-center text-[10px] tracking-widest uppercase text-stone/40 font-medium">
                   {d}
                 </div>
               ))}
               {Array.from({ length: firstDay }).map((_, i) => (
-                <div key={`empty-${i}`} className="bg-superficie p-2 min-h-[60px] sm:min-h-[80px]" />
+                <div key={`e-${i}`} className="bg-white/50 p-2 min-h-[70px]" />
               ))}
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1;
                 const date = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                 const hasEvents = bookingDates.has(date);
                 return (
-                  <button
-                    key={day}
-                    onClick={() => handleDayClick(day)}
-                    className={`bg-superficie p-2 min-h-[60px] sm:min-h-[80px] text-left transition-colors hover:bg-[#1a2a20] ${
-                      selectedDay === date ? "ring-1 ring-dorado" : ""
+                  <button key={day} onClick={() => handleDayClick(day)}
+                    className={`bg-white p-2 min-h-[70px] text-left transition-colors hover:bg-rose-light/10 ${
+                      selectedDay === date ? "ring-2 ring-rose ring-inset" : ""
                     }`}
                   >
-                    <span className={`text-xs sm:text-sm ${hasEvents ? "text-dorado font-semibold" : "text-crema/50"}`}>
-                      {day}
-                    </span>
-                    {hasEvents && (
-                      <div className="w-1.5 h-1.5 bg-dorado rounded-full mt-1" />
-                    )}
+                    <span className={`text-sm ${hasEvents ? "text-rose font-semibold" : "text-stone/60"}`}>{day}</span>
+                    {hasEvents && <div className="w-1.5 h-1.5 bg-rose rounded-full mt-1" />}
                   </button>
                 );
               })}
             </div>
             {selectedDay && (
-              <p className="text-center text-xs text-crema/50 mt-4">
-                Mostrando citas del <span className="text-dorado">{selectedDay}</span>
+              <p className="text-center text-xs text-stone/40 mt-4">
+                Mostrando citas del <span className="text-rose font-medium">{selectedDay}</span>
               </p>
             )}
           </div>
         )}
 
         {tab === "combos" && (
-          <div className="grid lg:grid-cols-2 gap-8">
+          <div className="grid lg:grid-cols-2 gap-10">
             <div>
-              <h3 className="font-display text-2xl text-dorado mb-6">
+              <h3 className="font-display text-2xl text-charcoal mb-6">
                 {editingCombo ? "Editar Combo" : "Nuevo Combo"}
               </h3>
-              <form onSubmit={handleComboSubmit} className="space-y-4">
-                <input
-                  placeholder="Nombre"
-                  value={comboForm.name}
-                  onChange={(e) => setComboForm((p) => ({ ...p, name: e.target.value }))}
-                  required
-                  className="w-full bg-transparent border border-crema/20 px-4 py-3 text-crema focus:outline-none focus:border-dorado text-sm"
-                />
-                <input
-                  placeholder="Categoría"
-                  value={comboForm.category}
-                  onChange={(e) => setComboForm((p) => ({ ...p, category: e.target.value }))}
-                  required
-                  className="w-full bg-transparent border border-crema/20 px-4 py-3 text-crema focus:outline-none focus:border-dorado text-sm"
-                />
-                <input
-                  placeholder="Precio (ej. $4,500)"
-                  value={comboForm.price}
-                  onChange={(e) => setComboForm((p) => ({ ...p, price: e.target.value }))}
-                  required
-                  className="w-full bg-transparent border border-crema/20 px-4 py-3 text-crema focus:outline-none focus:border-dorado text-sm"
-                />
-                <textarea
-                  placeholder="Descripción"
-                  value={comboForm.description}
-                  onChange={(e) => setComboForm((p) => ({ ...p, description: e.target.value }))}
-                  required
-                  rows={3}
-                  className="w-full bg-transparent border border-crema/20 px-4 py-3 text-crema focus:outline-none focus:border-dorado text-sm resize-none"
-                />
-                <input
-                  placeholder="URL de imagen (opcional)"
-                  value={comboForm.imageUrl}
+              <form onSubmit={handleComboSubmit} className="bg-white rounded-sm border border-stone/5 p-6 space-y-4">
+                <input placeholder="Nombre del combo" value={comboForm.name}
+                  onChange={(e) => setComboForm((p) => ({ ...p, name: e.target.value }))} required
+                  className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm" />
+                <input placeholder="Categoría (ej. Bodas)" value={comboForm.category}
+                  onChange={(e) => setComboForm((p) => ({ ...p, category: e.target.value }))} required
+                  className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm" />
+                <input placeholder="Precio (ej. $4,500)" value={comboForm.price}
+                  onChange={(e) => setComboForm((p) => ({ ...p, price: e.target.value }))} required
+                  className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm" />
+                <textarea placeholder="Descripción" value={comboForm.description}
+                  onChange={(e) => setComboForm((p) => ({ ...p, description: e.target.value }))} required rows={3}
+                  className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm resize-none" />
+                <input placeholder="URL de imagen (opcional)" value={comboForm.imageUrl}
                   onChange={(e) => setComboForm((p) => ({ ...p, imageUrl: e.target.value }))}
-                  className="w-full bg-transparent border border-crema/20 px-4 py-3 text-crema focus:outline-none focus:border-dorado text-sm"
-                />
-                <div className="flex gap-3">
-                  <button
-                    type="submit"
-                    className="border border-dorado bg-dorado/10 text-dorado px-6 py-2 text-xs tracking-widest uppercase hover:bg-dorado/20 transition-colors"
-                  >
+                  className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm" />
+                <div className="flex gap-3 pt-2">
+                  <button type="submit"
+                    className="bg-rose text-white px-6 py-2.5 text-xs tracking-widest uppercase font-medium hover:bg-rose-dark transition-all rounded-sm">
                     {editingCombo ? "Guardar cambios" : "Crear combo"}
                   </button>
                   {editingCombo && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditingCombo(null);
-                        setComboForm({ name: "", category: "", price: "", description: "", imageUrl: "" });
-                      }}
-                      className="border border-crema/20 text-crema/60 px-6 py-2 text-xs tracking-widest uppercase hover:bg-crema/5 transition-colors"
-                    >
+                    <button type="button" onClick={() => { setEditingCombo(null); setComboForm({ name: "", category: "", price: "", description: "", imageUrl: "" }); }}
+                      className="border border-stone/20 text-stone px-6 py-2.5 text-xs tracking-widest uppercase font-medium hover:border-rose hover:text-rose transition-all rounded-sm">
                       Cancelar
                     </button>
                   )}
@@ -322,33 +255,25 @@ export default function Dashboard() {
               </form>
             </div>
             <div>
-              <h3 className="font-display text-2xl text-dorado mb-6">Combos Existentes</h3>
+              <h3 className="font-display text-2xl text-charcoal mb-6">Combos Existentes</h3>
               {(!combos || combos.length === 0) ? (
-                <p className="text-crema/50 text-sm">Todavía no hay combos registrados.</p>
+                <p className="text-stone/50 text-sm">Todavía no hay combos registrados.</p>
               ) : (
                 <div className="space-y-3">
                   {combos.map((combo) => (
-                    <div key={combo._id} className="bg-superficie border border-crema/10 p-4 flex items-center justify-between gap-4">
+                    <div key={combo._id} className="bg-white rounded-sm border border-stone/5 p-5 flex items-center justify-between gap-4 card-hover">
                       <div className="flex-1 min-w-0">
-                        <p className="font-display text-lg text-crema">{combo.name}</p>
-                        <p className="text-xs text-crema/50">{combo.category} &mdash; {combo.price}</p>
+                        <p className="font-display text-lg text-charcoal">{combo.name}</p>
+                        <p className="text-xs text-stone/50">{combo.category} &mdash; {combo.price}</p>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className={`text-[10px] tracking-wider uppercase ${combo.active ? "text-green-400" : "text-rosa"}`}>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className={`text-[10px] tracking-wider uppercase font-medium px-2 py-0.5 rounded-full ${
+                          combo.active ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
+                        }`}>
                           {combo.active ? "Activo" : "Inactivo"}
                         </span>
-                        <button
-                          onClick={() => startEditCombo(combo)}
-                          className="text-xs text-dorado hover:text-dorado-claro transition-colors"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => deleteCombo({ id: combo._id as any })}
-                          className="text-xs text-rosa/60 hover:text-rosa transition-colors"
-                        >
-                          Eliminar
-                        </button>
+                        <button onClick={() => startEditCombo(combo)} className="text-xs text-stone/40 hover:text-rose transition-colors">Editar</button>
+                        <button onClick={() => deleteCombo({ id: combo._id as any })} className="text-xs text-stone/40 hover:text-rose transition-colors">Eliminar</button>
                       </div>
                     </div>
                   ))}
@@ -360,60 +285,37 @@ export default function Dashboard() {
 
         {tab === "nueva" && (
           <div className="max-w-lg mx-auto">
-            <h3 className="font-display text-2xl text-dorado mb-6">Registrar Cita Manual</h3>
-            <form onSubmit={handleCreateBooking} className="space-y-4">
-              <input
-                placeholder="Nombre del cliente"
-                value={newBooking.name}
-                onChange={(e) => setNewBooking((p) => ({ ...p, name: e.target.value }))}
-                required
-                className="w-full bg-transparent border border-crema/20 px-4 py-3 text-crema focus:outline-none focus:border-dorado text-sm"
-              />
-              <input
-                placeholder="Teléfono"
-                value={newBooking.phone}
-                onChange={(e) => setNewBooking((p) => ({ ...p, phone: e.target.value }))}
-                required
-                className="w-full bg-transparent border border-crema/20 px-4 py-3 text-crema focus:outline-none focus:border-dorado text-sm"
-              />
-              <input
-                type="date"
-                value={newBooking.date}
-                onChange={(e) => setNewBooking((p) => ({ ...p, date: e.target.value }))}
-                required
-                className="w-full bg-transparent border border-crema/20 px-4 py-3 text-crema focus:outline-none focus:border-dorado text-sm [color-scheme:dark]"
-              />
-              <select
-                value={newBooking.comboId}
-                onChange={(e) => setNewBooking((p) => ({ ...p, comboId: e.target.value }))}
-                required
-                className="w-full bg-superficie border border-crema/20 px-4 py-3 text-crema focus:outline-none focus:border-dorado text-sm"
-              >
-                <option value="" className="bg-superficie">Seleccionar combo</option>
+            <h3 className="font-display text-2xl text-charcoal mb-6">Registrar Cita Manual</h3>
+            <form onSubmit={handleCreateBooking} className="bg-white rounded-sm border border-stone/5 p-8 space-y-4">
+              <input placeholder="Nombre del cliente" value={newBooking.name}
+                onChange={(e) => setNewBooking((p) => ({ ...p, name: e.target.value }))} required
+                className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm" />
+              <input placeholder="Teléfono" value={newBooking.phone}
+                onChange={(e) => setNewBooking((p) => ({ ...p, phone: e.target.value }))} required
+                className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm" />
+              <input type="date" value={newBooking.date}
+                onChange={(e) => setNewBooking((p) => ({ ...p, date: e.target.value }))} required
+                className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm [color-scheme:light]" />
+              <select value={newBooking.comboId}
+                onChange={(e) => setNewBooking((p) => ({ ...p, comboId: e.target.value }))} required
+                className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm">
+                <option value="" className="bg-white">Seleccionar combo</option>
                 {combos?.map((c) => (
-                  <option key={c._id} value={c._id} className="bg-superficie">{c.name}</option>
+                  <option key={c._id} value={c._id} className="bg-white">{c.name}</option>
                 ))}
               </select>
-              <textarea
-                placeholder="Notas (opcional)"
-                value={newBooking.notes}
-                onChange={(e) => setNewBooking((p) => ({ ...p, notes: e.target.value }))}
-                rows={3}
-                className="w-full bg-transparent border border-crema/20 px-4 py-3 text-crema focus:outline-none focus:border-dorado text-sm resize-none"
-              />
-              <select
-                value={newBooking.status}
+              <textarea placeholder="Notas (opcional)" value={newBooking.notes}
+                onChange={(e) => setNewBooking((p) => ({ ...p, notes: e.target.value }))} rows={3}
+                className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm resize-none" />
+              <select value={newBooking.status}
                 onChange={(e) => setNewBooking((p) => ({ ...p, status: e.target.value as any }))}
-                className="w-full bg-superficie border border-crema/20 px-4 py-3 text-crema focus:outline-none focus:border-dorado text-sm"
-              >
-                <option value="pendiente" className="bg-superficie">Pendiente</option>
-                <option value="confirmado" className="bg-superficie">Confirmado</option>
-                <option value="cancelado" className="bg-superficie">Cancelado</option>
+                className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose text-sm">
+                <option value="pendiente" className="bg-white">Pendiente</option>
+                <option value="confirmado" className="bg-white">Confirmado</option>
+                <option value="cancelado" className="bg-white">Cancelado</option>
               </select>
-              <button
-                type="submit"
-                className="w-full border border-dorado bg-dorado/10 text-dorado px-8 py-3 text-sm tracking-widest uppercase hover:bg-dorado/20 transition-colors"
-              >
+              <button type="submit"
+                className="w-full bg-rose text-white px-8 py-3 text-sm tracking-wider uppercase font-medium hover:bg-rose-dark transition-all hover:shadow-lg hover:shadow-rose/25 rounded-sm">
                 Registrar Cita
               </button>
             </form>
@@ -422,93 +324,70 @@ export default function Dashboard() {
 
         {tab === "citas" && (
           <div>
-            <div className="flex flex-wrap items-center gap-3 mb-6">
-              <h3 className="font-display text-2xl text-dorado mr-4">
+            <div className="flex flex-wrap items-center gap-4 mb-6">
+              <h3 className="font-display text-2xl text-charcoal">
                 {selectedDay ? `Citas del ${selectedDay}` : "Todas las Citas"}
               </h3>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-superficie border border-crema/20 px-3 py-1.5 text-xs text-crema focus:outline-none focus:border-dorado"
-              >
-                <option value="todas" className="bg-superficie">Todos los estados</option>
-                <option value="pendiente" className="bg-superficie">Pendiente</option>
-                <option value="confirmado" className="bg-superficie">Confirmado</option>
-                <option value="cancelado" className="bg-superficie">Cancelado</option>
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-white border border-stone/20 px-3 py-1.5 text-xs text-charcoal focus:outline-none focus:border-rose rounded-sm">
+                <option value="todas" className="bg-white">Todos los estados</option>
+                <option value="pendiente" className="bg-white">Pendiente</option>
+                <option value="confirmado" className="bg-white">Confirmado</option>
+                <option value="cancelado" className="bg-white">Cancelado</option>
               </select>
             </div>
 
             {(!filteredBookings || filteredBookings.length === 0) ? (
-              <div className="text-center py-16">
-                <p className="text-crema/40 font-display text-2xl">Todavía no hay citas registradas</p>
-                <p className="text-crema/30 text-sm mt-2">Las citas que los clientes agenden aparecerán aquí.</p>
+              <div className="text-center py-20 bg-white rounded-sm border border-stone/5">
+                <div className="w-12 h-12 bg-rose-light/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6 text-rose/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                </div>
+                <p className="font-display text-xl text-stone/40">Todavía no hay citas registradas</p>
+                <p className="text-stone/30 text-sm mt-1">Las citas que los clientes agenden aparecerán aquí.</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {filteredBookings.map((booking) => {
                   const combo = combos?.find((c) => c._id === booking.comboId);
                   return (
-                    <div
-                      key={booking._id}
-                      className={`bg-superficie border border-crema/10 border-l-4 ${STATUS_COLORS[booking.status]} p-4 sm:p-5`}
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                    <div key={booking._id} className="bg-white rounded-sm border border-stone/5 p-5 card-hover">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-1">
-                            <h4 className="font-display text-lg text-crema">{booking.name}</h4>
-                            <span className={`text-[10px] tracking-wider uppercase px-2 py-0.5 border ${
-                              booking.status === "pendiente" ? "border-dorado/30 text-dorado" :
-                              booking.status === "confirmado" ? "border-green-500/30 text-green-400" :
-                              "border-rosa/30 text-rosa"
-                            }`}>
+                          <div className="flex items-center gap-3 mb-1.5 flex-wrap">
+                            <h4 className="font-display text-lg text-charcoal">{booking.name}</h4>
+                            <span className={`text-[10px] tracking-wider uppercase font-medium px-2 py-0.5 rounded-full border ${STATUS_STYLES[booking.status]}`}>
                               {STATUS_LABELS[booking.status]}
                             </span>
                           </div>
-                          <p className="text-xs text-crema/60">
-                            {booking.date} &mdash; {booking.phone}
-                          </p>
-                          {combo && (
-                            <p className="text-xs text-dorado/80 mt-1">
-                              {combo.name} &mdash; {combo.price}
-                            </p>
-                          )}
-                          {booking.notes && (
-                            <p className="text-xs text-crema/50 mt-1 italic">{booking.notes}</p>
-                          )}
+                          <p className="text-xs text-stone/50">{booking.date} &mdash; {booking.phone}</p>
+                          {combo && <p className="text-xs text-rose/70 mt-1">{combo.name} &mdash; {combo.price}</p>}
+                          {booking.notes && <p className="text-xs text-stone/40 mt-1 italic">&ldquo;{booking.notes}&rdquo;</p>}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           {booking.status !== "confirmado" && (
-                            <button
-                              onClick={() => updateStatus({ id: booking._id as any, status: "confirmado" })}
-                              className="text-xs border border-green-500/30 text-green-400 px-3 py-1 hover:bg-green-500/10 transition-colors"
-                            >
+                            <button onClick={() => updateStatus({ id: booking._id as any, status: "confirmado" })}
+                              className="text-xs border border-emerald-200 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-sm hover:bg-emerald-100 transition-colors font-medium">
                               Confirmar
                             </button>
                           )}
                           {booking.status !== "cancelado" && (
-                            <button
-                              onClick={() => updateStatus({ id: booking._id as any, status: "cancelado" })}
-                              className="text-xs border border-rosa/30 text-rosa px-3 py-1 hover:bg-rosa/10 transition-colors"
-                            >
+                            <button onClick={() => updateStatus({ id: booking._id as any, status: "cancelado" })}
+                              className="text-xs border border-rose-200 bg-rose-50 text-rose-700 px-3 py-1.5 rounded-sm hover:bg-rose-100 transition-colors font-medium">
                               Cancelar
                             </button>
                           )}
-                          <button
-                            onClick={() => {
-                              const msg = `Hola ${booking.name}, tu cita en Follaje & Listón para el ${booking.date} ha sido ${booking.status === "confirmado" ? "confirmada" : "actualizada"}.`;
-                              window.open(`https://wa.me/${booking.phone}?text=${encodeURIComponent(msg)}`, "_blank");
-                            }}
-                            className="text-xs text-dorado hover:text-dorado-claro transition-colors px-2"
-                            title="Enviar WhatsApp"
-                          >
+                          <button onClick={() => {
+                            const msg = `Hola ${booking.name}, tu cita en Follaje & Listón para el ${booking.date} ha sido ${booking.status === "confirmado" ? "confirmada" : "actualizada"}.`;
+                            window.open(`https://wa.me/${booking.phone}?text=${encodeURIComponent(msg)}`, "_blank");
+                          }} className="text-stone/40 hover:text-rose transition-colors p-1" title="Enviar WhatsApp">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                              <path d="M22 16.92v3a2 2 0 0 1 -2.18 2a19.79 19.79 0 0 1 -8.63 -3.07a19.5 19.5 0 0 1 -6 -6a19.79 19.79 0 0 1 -3.07 -8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72a12.84 12.84 0 0 0 .7 2.81a2 2 0 0 1 -.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27 -1.27a2 2 0 0 1 2.11 -.45a12.84 12.84 0 0 0 2.81 .7A2 2 0 0 1 22 16.92z" />
+                              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                             </svg>
                           </button>
-                          <button
-                            onClick={() => removeBooking({ id: booking._id as any })}
-                            className="text-xs text-rosa/50 hover:text-rosa transition-colors"
-                          >
+                          <button onClick={() => removeBooking({ id: booking._id as any })}
+                            className="text-stone/30 hover:text-rose transition-colors p-1">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                               <path d="M18 6L6 18M6 6l12 12" />
                             </svg>

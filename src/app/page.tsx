@@ -8,13 +8,37 @@ const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "521234567890
 const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}`;
 
 const CATEGORIES = [
-  { value: "todas", label: "Todas" },
+  { value: "todas", label: "Todo" },
   { value: "Bodas", label: "Bodas" },
   { value: "Cumpleaños", label: "Cumpleaños" },
   { value: "Baby Shower", label: "Baby Shower" },
   { value: "Quince Años", label: "Quince Años" },
   { value: "Corporativo", label: "Corporativo" },
 ];
+
+function FlowerIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
+      <path d="M12 2C12 2 8 6 8 10C8 13.3 10.7 16 12 16C13.3 16 16 13.3 16 10C16 6 12 2 12 2Z" />
+      <path d="M12 22C12 22 16 18 16 14C16 10.7 13.3 8 12 8C10.7 8 8 10.7 8 14C8 18 12 22 12 22Z" />
+      <path d="M5 8C5 8 8 10 11 9.5C13.5 9.1 15 7 15 7" />
+      <path d="M19 8C19 8 16 10 13 9.5C10.5 9.1 9 7 9 7" />
+      <path d="M5 16C5 16 8 14 11 14.5C13.5 14.9 15 17 15 17" />
+      <path d="M19 16C19 16 16 14 13 14.5C10.5 14.9 9 17 9 17" />
+    </svg>
+  );
+}
+
+function LeafIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
+      <path d="M12 3C12 3 7 8 6 13C5.5 15.5 7 19 12 21" />
+      <path d="M12 3C12 3 17 8 18 13C18.5 15.5 17 19 12 21" />
+      <path d="M8 10L16 10" />
+      <path d="M6 14L18 14" />
+    </svg>
+  );
+}
 
 export default function Home() {
   const combos = useQuery(api.combos.list);
@@ -25,11 +49,7 @@ export default function Home() {
   const [showForm, setShowForm] = useState(false);
   const [selectedCombo, setSelectedCombo] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    date: "",
-    comboId: "",
-    notes: "",
+    name: "", phone: "", date: "", comboId: "", notes: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
@@ -77,109 +97,119 @@ export default function Home() {
     const combo = combos?.find((c) => c._id === formData.comboId);
     const message = `¡Hola! Soy ${formData.name}. Acabo de agendar una cita en Follaje & Listón para el ${formData.date}.${combo ? ` Combo: ${combo.name}.` : ""} ¿Podemos confirmar los detalles?`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank");
-
     setSubmitted(true);
   };
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-fondo/90 backdrop-blur-sm border-b border-dorado/20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-8 h-16 sm:h-20 flex items-center justify-between">
-          <a href="#" className="font-display text-xl sm:text-2xl text-dorado tracking-wider">
-            Follaje <span className="text-crema/60">&</span> Listón
+      <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-rose-light/30">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10 h-20 flex items-center justify-between">
+          <a href="#" className="font-display text-2xl lg:text-3xl text-charcoal tracking-wide">
+            Follaje <span className="text-rose">&</span>{" "}
+            <span className="text-sage">Listón</span>
           </a>
-          <nav className="hidden sm:flex items-center gap-8 text-sm tracking-widest uppercase">
-            <a href="#combos" className="text-crema/70 hover:text-dorado transition-colors">Combos</a>
-            <a href="#contacto" className="text-crema/70 hover:text-dorado transition-colors">Contacto</a>
+          <nav className="hidden md:flex items-center gap-10">
+            <a href="#combos" className="text-stone hover:text-rose text-sm tracking-wider uppercase font-medium transition-colors">Combos</a>
+            <a href="#contacto" className="text-stone hover:text-rose text-sm tracking-wider uppercase font-medium transition-colors">Contacto</a>
             <a
               href={WHATSAPP_LINK}
               target="_blank"
               rel="noopener noreferrer"
-              className="border border-dorado/40 text-dorado px-5 py-2 hover:bg-dorado/10 transition-colors"
+              className="bg-rose text-white px-6 py-2.5 text-sm tracking-wider uppercase font-medium hover:bg-rose-dark transition-all hover:shadow-lg hover:shadow-rose/25 rounded-sm"
             >
               Agendar
             </a>
           </nav>
-          <button
-            className="sm:hidden text-crema"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              {mobileMenuOpen ? (
-                <path d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path d="M3 12h18M3 6h18M3 18h18" />
-              )}
+          <button className="md:hidden text-charcoal" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              {mobileMenuOpen ? <path d="M6 18L18 6M6 6l12 12" /> : <path d="M4 6h16M4 12h16M4 18h16" />}
             </svg>
           </button>
         </div>
         {mobileMenuOpen && (
-          <div className="sm:hidden bg-superficie border-b border-dorado/20 px-4 py-4">
-            <nav className="flex flex-col gap-4 text-sm tracking-widest uppercase">
-              <a href="#combos" className="text-crema/70 hover:text-dorado transition-colors" onClick={() => setMobileMenuOpen(false)}>Combos</a>
-              <a href="#contacto" className="text-crema/70 hover:text-dorado transition-colors" onClick={() => setMobileMenuOpen(false)}>Contacto</a>
-              <a
-                href={WHATSAPP_LINK}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="border border-dorado/40 text-dorado px-5 py-2 text-center hover:bg-dorado/10 transition-colors"
-              >
-                Agendar
-              </a>
+          <div className="md:hidden glass border-t border-rose-light/20 px-6 py-5">
+            <nav className="flex flex-col gap-4">
+              <a href="#combos" className="text-stone hover:text-rose text-sm tracking-wider uppercase font-medium" onClick={() => setMobileMenuOpen(false)}>Combos</a>
+              <a href="#contacto" className="text-stone hover:text-rose text-sm tracking-wider uppercase font-medium" onClick={() => setMobileMenuOpen(false)}>Contacto</a>
+              <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" className="bg-rose text-white px-5 py-2.5 text-sm tracking-wider uppercase font-medium text-center rounded-sm">Agendar</a>
             </nav>
           </div>
         )}
       </header>
 
       <main>
-        <section className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-8 pt-24 pb-16 sm:pb-24">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="w-12 h-px bg-dorado mx-auto mb-8" />
-            <h1 className="font-display text-5xl sm:text-7xl md:text-8xl text-dorado leading-none tracking-wide">
-              Follaje & Listón
-            </h1>
-            <p className="font-display text-xl sm:text-2xl md:text-3xl text-crema/60 italic mt-4 sm:mt-6 font-light">
-              Decoración boutique para momentos inolvidables
-            </p>
-            <div className="w-12 h-px bg-dorado mx-auto mt-8 mb-10" />
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
-                href="#combos"
-                className="inline-block border border-dorado bg-dorado/10 text-dorado px-8 py-3 text-sm tracking-widest uppercase hover:bg-dorado/20 transition-colors"
-              >
-                Ver Combos
-              </a>
-              <a
-                href={`https://wa.me/${WHATSAPP_NUMBER}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block border border-crema/30 text-crema px-8 py-3 text-sm tracking-widest uppercase hover:bg-crema/5 transition-colors"
-              >
-                Agendar Cita
-              </a>
+        <section className="hero-gradient min-h-screen flex items-center relative overflow-hidden pt-20">
+          <div className="absolute inset-0 opacity-[0.04] pointer-events-none">
+            <div className="absolute top-20 left-10 text-rose"><FlowerIcon className="w-32 h-32" /></div>
+            <div className="absolute bottom-20 right-10 text-sage"><LeafIcon className="w-40 h-40" /></div>
+            <div className="absolute top-1/3 right-1/4 text-gold"><FlowerIcon className="w-24 h-24" /></div>
+            <div className="absolute bottom-1/3 left-1/4 text-rose"><LeafIcon className="w-28 h-28" /></div>
+          </div>
+          <div className="max-w-7xl mx-auto px-6 lg:px-10 w-full">
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="inline-flex items-center gap-3 mb-8">
+                <span className="w-8 h-px bg-rose/40" />
+                <span className="text-rose/70 text-xs tracking-[0.25em] uppercase font-medium">Decoración Boutique</span>
+                <span className="w-8 h-px bg-rose/40" />
+              </div>
+              <h1 className="font-display text-5xl sm:text-7xl lg:text-8xl text-charcoal leading-[0.95] mb-6 tracking-tight">
+                Creamos el
+                <br />
+                <span className="gradient-text">escenario perfecto</span>
+                <br />
+                para tu historia
+              </h1>
+              <p className="text-stone/80 text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+                Bodas, cumpleaños, baby showers y eventos corporativos — cada detalle cuenta,
+                y nosotros nos encargamos de todos.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <a
+                  href="#combos"
+                  className="group bg-charcoal text-ivory px-8 py-3.5 text-sm tracking-wider uppercase font-medium hover:bg-rose transition-all duration-300 inline-flex items-center justify-center gap-2"
+                >
+                  Ver Combos
+                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </a>
+                <a
+                  href={WHATSAPP_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group border-2 border-charcoal/20 text-charcoal px-8 py-3.5 text-sm tracking-wider uppercase font-medium hover:border-rose hover:text-rose transition-all duration-300 inline-flex items-center justify-center gap-2"
+                >
+                  Hablemos
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                  </svg>
+                </a>
+              </div>
             </div>
           </div>
+          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-ivory to-transparent" />
         </section>
 
-        <div className="w-full h-px bg-gradient-to-r from-transparent via-dorado/40 to-transparent" />
-
-        <section id="combos" className="py-16 sm:py-24 px-4 sm:px-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12 sm:mb-16">
-              <p className="text-dorado text-xs tracking-[0.3em] uppercase mb-4">Nuestros</p>
-              <h2 className="font-display text-4xl sm:text-5xl md:text-6xl text-dorado">Combos</h2>
-              <div className="w-8 h-px bg-dorado mx-auto mt-6" />
+        <section id="combos" className="py-24 lg:py-32 px-6 lg:px-10 bg-ivory">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <span className="text-rose text-xs tracking-[0.25em] uppercase font-medium">Nuestros</span>
+              <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl text-charcoal mt-3 mb-4">Paquetes de Decoración</h2>
+              <div className="w-16 h-0.5 bg-gradient-to-r from-rose via-gold to-sage mx-auto" />
+              <p className="text-stone/70 mt-5 max-w-lg mx-auto">
+                Cada paquete incluye montaje, desmontaje y asesoría personalizada.
+              </p>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-12 sm:mb-16">
+            <div className="flex flex-wrap justify-center gap-2 mb-16">
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.value}
                   onClick={() => setSelectedCategory(cat.value)}
-                  className={`px-4 py-2 text-xs tracking-widest uppercase border transition-colors ${
+                  className={`px-5 py-2.5 text-xs tracking-widest uppercase font-medium rounded-full transition-all duration-300 ${
                     selectedCategory === cat.value
-                      ? "border-dorado text-dorado bg-dorado/10"
-                      : "border-crema/20 text-crema/60 hover:border-crema/40 hover:text-crema"
+                      ? "bg-rose text-white shadow-md shadow-rose/20"
+                      : "bg-white text-stone border border-stone/20 hover:border-rose hover:text-rose"
                   }`}
                 >
                   {cat.label}
@@ -187,120 +217,121 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-dorado/20">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
               {filtered?.map((combo) => (
                 <div
                   key={combo._id}
-                  className="bg-superficie p-6 sm:p-8 flex flex-col group hover:bg-[#1a2a20] transition-colors"
+                  className="group bg-white rounded-sm overflow-hidden border border-stone/5 card-hover"
                 >
-                  <div className="w-full aspect-[4/3] bg-fondo/50 flex items-center justify-center mb-5 border border-dorado/10">
-                    <div className="text-dorado/30">
-                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-                        <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
-                      </svg>
+                  <div className="relative h-56 bg-gradient-to-br from-rose-light/30 via-ivory-alt to-sage-light/30 flex items-center justify-center overflow-hidden">
+                    <FlowerIcon className="w-20 h-20 text-rose/20 flower-icon" />
+                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 text-sm font-medium text-rose-dark rounded-full">
+                      {combo.price}
                     </div>
+                    <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent" />
                   </div>
-                  <p className="text-dorado text-[10px] tracking-[0.2em] uppercase mb-2">{combo.category}</p>
-                  <h3 className="font-display text-2xl text-crema mb-2">{combo.name}</h3>
-                  <p className="text-dorado font-display text-xl mb-3">{combo.price}</p>
-                  <p className="text-crema/60 text-sm leading-relaxed mb-6 flex-1">{combo.description}</p>
-                  <button
-                    onClick={() => handleComboSelect(combo._id)}
-                    className="text-xs tracking-widest uppercase text-dorado border-b border-dorado/30 pb-1 self-start hover:text-dorado-claro hover:border-dorado-claro transition-colors"
-                  >
-                    Elegir para mi evento
-                  </button>
+                  <div className="p-6 lg:p-7">
+                    <span className="text-rose-dark/60 text-[10px] tracking-[0.2em] uppercase font-medium">{combo.category}</span>
+                    <h3 className="font-display text-2xl text-charcoal mt-1 mb-2">{combo.name}</h3>
+                    <p className="text-stone/60 text-sm leading-relaxed mb-5 line-clamp-2">{combo.description}</p>
+                    <button
+                      onClick={() => handleComboSelect(combo._id)}
+                      className="inline-flex items-center gap-2 text-sm font-medium text-rose hover:text-rose-dark transition-colors group/btn"
+                    >
+                      Elegir para mi evento
+                      <svg className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <div className="w-full h-px bg-gradient-to-r from-transparent via-dorado/40 to-transparent" />
+        <section className="py-20 lg:py-28 bg-ivory-alt relative overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
+            <FlowerIcon className="absolute top-10 right-10 w-48 h-48 text-rose" />
+            <LeafIcon className="absolute bottom-10 left-10 w-36 h-36 text-sage" />
+          </div>
+          <div className="max-w-4xl mx-auto px-6 lg:px-10 text-center relative z-10">
+            <span className="text-sage text-xs tracking-[0.25em] uppercase font-medium">¿Listo para tu evento?</span>
+            <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl text-charcoal mt-3 mb-6">
+              Hagamos algo hermoso juntos
+            </h2>
+            <p className="text-stone/60 max-w-xl mx-auto mb-8">
+              Cuéntanos tu visión y crearemos una propuesta personalizada para ti.
+            </p>
+            <a
+              href="#booking-form"
+              className="inline-flex items-center gap-2 bg-sage text-white px-8 py-3.5 text-sm tracking-wider uppercase font-medium hover:bg-sage-dark transition-all hover:shadow-lg hover:shadow-sage/25"
+            >
+              Solicitar cotización
+            </a>
+          </div>
+        </section>
 
-        <section id="booking-form" className="py-16 sm:py-24 px-4 sm:px-8">
+        <section id="booking-form" className="py-24 lg:py-32 px-6 lg:px-10 bg-ivory">
           <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-12">
-              <p className="text-dorado text-xs tracking-[0.3em] uppercase mb-4">Agenda tu</p>
-              <h2 className="font-display text-4xl sm:text-5xl text-dorado">Cita</h2>
-              <div className="w-8 h-px bg-dorado mx-auto mt-6" />
-              <p className="text-crema/60 text-sm mt-4 max-w-md mx-auto">
-                Cuéntanos sobre tu evento y nos pondremos en contacto contigo.
-              </p>
+            <div className="text-center mb-14">
+              <span className="text-rose text-xs tracking-[0.25em] uppercase font-medium">Agenda tu</span>
+              <h2 className="font-display text-4xl sm:text-5xl text-charcoal mt-3 mb-4">Cita</h2>
+              <div className="w-16 h-0.5 bg-gradient-to-r from-rose via-gold to-sage mx-auto" />
+              <p className="text-stone/60 mt-4">Déjanos tus datos y te contactaremos para confirmar.</p>
             </div>
 
             {submitted ? (
-              <div className="text-center py-12 border border-dorado/20 px-6">
-                <div className="text-dorado text-4xl mb-4">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="mx-auto">
-                    <path d="M22 11.08V12a10 10 0 1 1 -5.93 -9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+              <div className="text-center py-16 bg-white border border-stone/5 rounded-sm">
+                <div className="w-16 h-16 bg-sage-light/50 rounded-full flex items-center justify-center mx-auto mb-5">
+                  <svg className="w-8 h-8 text-sage-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
                   </svg>
                 </div>
-                <p className="font-display text-2xl text-crema mb-2">¡Cita agendada!</p>
-                <p className="text-crema/60 text-sm">Te redirigimos a WhatsApp para confirmar los detalles.</p>
+                <p className="font-display text-2xl text-charcoal mb-2">¡Cita agendada!</p>
+                <p className="text-stone/60">Te redirigimos a WhatsApp para ultimar detalles.</p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-xs tracking-widest uppercase text-crema/70 mb-2">Nombre completo</label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
-                    className="w-full bg-transparent border border-crema/20 px-4 py-3 text-crema focus:outline-none focus:border-dorado transition-colors"
-                  />
-                  {errors.name && <p className="text-rosa text-xs mt-1">{errors.name}</p>}
+              <form onSubmit={handleSubmit} className="bg-white border border-stone/5 rounded-sm p-8 lg:p-10 space-y-6">
+                <div className="grid sm:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-xs tracking-widest uppercase text-stone/60 mb-2">Nombre completo</label>
+                    <input type="text" value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
+                      className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose transition-colors" />
+                    {errors.name && <p className="text-rose text-xs mt-1">{errors.name}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-xs tracking-widest uppercase text-stone/60 mb-2">Teléfono</label>
+                    <input type="tel" value={formData.phone} onChange={(e) => setFormData((p) => ({ ...p, phone: e.target.value }))}
+                      placeholder="+52 555 123 4567"
+                      className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose transition-colors" />
+                    {errors.phone && <p className="text-rose text-xs mt-1">{errors.phone}</p>}
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-crema/70 mb-2">Teléfono</label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData((p) => ({ ...p, phone: e.target.value }))}
-                    placeholder="+52 555 123 4567"
-                    className="w-full bg-transparent border border-crema/20 px-4 py-3 text-crema focus:outline-none focus:border-dorado transition-colors"
-                  />
-                  {errors.phone && <p className="text-rosa text-xs mt-1">{errors.phone}</p>}
+                  <label className="block text-xs tracking-widest uppercase text-stone/60 mb-2">Fecha del evento</label>
+                  <input type="date" value={formData.date} onChange={(e) => setFormData((p) => ({ ...p, date: e.target.value }))}
+                    className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose transition-colors [color-scheme:light]" />
+                  {errors.date && <p className="text-rose text-xs mt-1">{errors.date}</p>}
                 </div>
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-crema/70 mb-2">Fecha del evento</label>
-                  <input
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData((p) => ({ ...p, date: e.target.value }))}
-                    className="w-full bg-transparent border border-crema/20 px-4 py-3 text-crema focus:outline-none focus:border-dorado transition-colors [color-scheme:dark]"
-                  />
-                  {errors.date && <p className="text-rosa text-xs mt-1">{errors.date}</p>}
-                </div>
-                <div>
-                  <label className="block text-xs tracking-widest uppercase text-crema/70 mb-2">Combo</label>
-                  <select
-                    value={formData.comboId}
-                    onChange={(e) => setFormData((p) => ({ ...p, comboId: e.target.value }))}
-                    className="w-full bg-superficie border border-crema/20 px-4 py-3 text-crema focus:outline-none focus:border-dorado transition-colors"
-                  >
-                    <option value="" className="bg-superficie">Selecciona un combo</option>
+                  <label className="block text-xs tracking-widest uppercase text-stone/60 mb-2">Combo</label>
+                  <select value={formData.comboId} onChange={(e) => setFormData((p) => ({ ...p, comboId: e.target.value }))}
+                    className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose transition-colors">
+                    <option value="" className="bg-white">Selecciona un combo</option>
                     {combos?.map((combo) => (
-                      <option key={combo._id} value={combo._id} className="bg-superficie">
-                        {combo.name} — {combo.price}
-                      </option>
+                      <option key={combo._id} value={combo._id} className="bg-white">{combo.name} — {combo.price}</option>
                     ))}
                   </select>
-                  {errors.comboId && <p className="text-rosa text-xs mt-1">{errors.comboId}</p>}
+                  {errors.comboId && <p className="text-rose text-xs mt-1">{errors.comboId}</p>}
                 </div>
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-crema/70 mb-2">Notas (opcional)</label>
-                  <textarea
-                    value={formData.notes}
-                    onChange={(e) => setFormData((p) => ({ ...p, notes: e.target.value }))}
-                    rows={3}
-                    className="w-full bg-transparent border border-crema/20 px-4 py-3 text-crema focus:outline-none focus:border-dorado transition-colors resize-none"
-                  />
+                  <label className="block text-xs tracking-widest uppercase text-stone/60 mb-2">Notas (opcional)</label>
+                  <textarea value={formData.notes} onChange={(e) => setFormData((p) => ({ ...p, notes: e.target.value }))} rows={3}
+                    className="w-full bg-ivory-alt border-0 border-b-2 border-stone/10 px-0 py-3 text-charcoal focus:outline-none focus:border-rose transition-colors resize-none" />
                 </div>
-                <button
-                  type="submit"
-                  className="w-full border border-dorado bg-dorado/10 text-dorado px-8 py-3 text-sm tracking-widest uppercase hover:bg-dorado/20 transition-colors"
-                >
+                <button type="submit"
+                  className="w-full bg-rose text-white px-8 py-3.5 text-sm tracking-wider uppercase font-medium hover:bg-rose-dark transition-all hover:shadow-lg hover:shadow-rose/25 rounded-sm">
                   Agendar cita
                 </button>
               </form>
@@ -308,63 +339,80 @@ export default function Home() {
           </div>
         </section>
 
-        <div className="w-full h-px bg-gradient-to-r from-transparent via-dorado/40 to-transparent" />
-
-        <section id="contacto" className="py-16 sm:py-24 px-4 sm:px-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <p className="text-dorado text-xs tracking-[0.3em] uppercase mb-4">Contáctanos</p>
-              <h2 className="font-display text-4xl sm:text-5xl text-dorado">Contacto</h2>
-              <div className="w-8 h-px bg-dorado mx-auto mt-6" />
+        <section id="contacto" className="py-24 lg:py-32 px-6 lg:px-10 bg-ivory-alt relative overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
+            <FlowerIcon className="absolute bottom-0 right-0 w-56 h-56 text-sage" />
+          </div>
+          <div className="max-w-7xl mx-auto relative z-10">
+            <div className="text-center mb-16">
+              <span className="text-gold text-xs tracking-[0.25em] uppercase font-medium">Contáctanos</span>
+              <h2 className="font-display text-4xl sm:text-5xl text-charcoal mt-3 mb-4">Estamos aquí para ti</h2>
+              <div className="w-16 h-0.5 bg-gradient-to-r from-rose via-gold to-sage mx-auto" />
             </div>
-            <div className="grid sm:grid-cols-3 gap-px bg-dorado/20">
-              <div className="bg-superficie p-8 sm:p-10 text-center">
-                <div className="text-dorado/50 mb-4">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto">
-                    <path d="M22 16.92v3a2 2 0 0 1 -2.18 2a19.79 19.79 0 0 1 -8.63 -3.07a19.5 19.5 0 0 1 -6 -6a19.79 19.79 0 0 1 -3.07 -8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72a12.84 12.84 0 0 0 .7 2.81a2 2 0 0 1 -.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27 -1.27a2 2 0 0 1 2.11 -.45a12.84 12.84 0 0 0 2.81 .7A2 2 0 0 1 22 16.92z" />
-                  </svg>
+            <div className="grid sm:grid-cols-3 gap-6">
+              {[
+                {
+                  icon: (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </svg>
+                  ),
+                  title: "WhatsApp",
+                  value: WHATSAPP_NUMBER,
+                  href: WHATSAPP_LINK,
+                },
+                {
+                  icon: (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </svg>
+                  ),
+                  title: "Teléfono",
+                  value: "+52 555 123 4567",
+                  href: null,
+                },
+                {
+                  icon: (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+                    </svg>
+                  ),
+                  title: "Cobertura",
+                  value: "CDMX y Área Metropolitana",
+                  href: null,
+                },
+              ].map((item, i) => (
+                <div key={i} className="bg-white rounded-sm p-8 text-center card-hover border border-stone/5">
+                  <div className="w-12 h-12 bg-gradient-to-br from-rose-light/30 to-sage-light/30 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-dark">
+                    {item.icon}
+                  </div>
+                  <p className="text-xs tracking-widest uppercase text-stone/50 mb-2">{item.title}</p>
+                  {item.href ? (
+                    <a href={item.href} target="_blank" rel="noopener noreferrer" className="text-rose font-medium hover:text-rose-dark transition-colors">
+                      {item.value}
+                    </a>
+                  ) : (
+                    <p className="text-charcoal font-medium">{item.value}</p>
+                  )}
                 </div>
-                <p className="text-xs tracking-widest uppercase text-crema/50 mb-2">WhatsApp</p>
-                <a
-                  href={WHATSAPP_LINK}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-dorado hover:text-dorado-claro transition-colors"
-                >
-                  {WHATSAPP_NUMBER}
-                </a>
-              </div>
-              <div className="bg-superficie p-8 sm:p-10 text-center">
-                <div className="text-dorado/50 mb-4">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto">
-                    <path d="M22 16.92v3a2 2 0 0 1 -2.18 2a19.79 19.79 0 0 1 -8.63 -3.07a19.5 19.5 0 0 1 -6 -6a19.79 19.79 0 0 1 -3.07 -8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72a12.84 12.84 0 0 0 .7 2.81a2 2 0 0 1 -.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27 -1.27a2 2 0 0 1 2.11 -.45a12.84 12.84 0 0 0 2.81 .7A2 2 0 0 1 22 16.92z" />
-                  </svg>
-                </div>
-                <p className="text-xs tracking-widest uppercase text-crema/50 mb-2">Teléfono</p>
-                <p className="text-crema/80">+52 555 123 4567</p>
-              </div>
-              <div className="bg-superficie p-8 sm:p-10 text-center">
-                <div className="text-dorado/50 mb-4">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto">
-                    <path d="M21 10c0 7 -9 13 -9 13s-9 -6 -9 -13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
-                  </svg>
-                </div>
-                <p className="text-xs tracking-widest uppercase text-crema/50 mb-2">Cobertura</p>
-                <p className="text-crema/80">Ciudad de México y Área Metropolitana</p>
-              </div>
+              ))}
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-dorado/10 py-8 px-4 sm:px-8">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="font-display text-dorado/60 text-sm">
-            Follaje & Listón &copy; {new Date().getFullYear()}
+      <footer className="bg-charcoal text-ivory/60 py-12 px-6 lg:px-10">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="font-display text-ivory/40 text-lg">
+            Follaje <span className="text-rose/60">&</span>{" "}
+            <span className="text-sage/60">Listón</span>
+          </p>
+          <p className="text-xs tracking-wide">
+            &copy; {new Date().getFullYear()} — Todos los derechos reservados
           </p>
           <a
             href="/admin"
-            className="text-xs text-crema/30 hover:text-crema/60 tracking-wider uppercase transition-colors"
+            className="text-xs text-ivory/20 hover:text-ivory/50 tracking-wider uppercase transition-colors"
           >
             Acceso privado
           </a>

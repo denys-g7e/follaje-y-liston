@@ -15,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-fondo text-crema font-body">
+      <body className="min-h-full flex flex-col bg-ivory text-charcoal font-body">
         <ConvexClientProvider>{children}</ConvexClientProvider>
       </body>
     </html>
